@@ -7,12 +7,14 @@
 #include "src/HMMcomponents/Observable.h"
 
 class HMM {
-vector<hiddenState> hiddenStates;
-vector<Observable> observables;
+vector<hiddenState*> hiddenStates;
+vector<Observable*> observables;
 public:
-    HMM(const vector<hiddenState> &hiddenStates, const vector<Observable> &observables);
+    HMM(const vector<hiddenState*> &hiddenStates, const vector<Observable*> &observables);
 
     bool checkValues();
+
+    double likelihood(std::vector<Observable>observations);
 };
 
 

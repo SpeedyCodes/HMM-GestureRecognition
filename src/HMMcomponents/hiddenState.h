@@ -9,13 +9,13 @@ using namespace std;
 class hiddenState {
 public:
     int id;
-    map<hiddenState,double> transitionMap;
-    map<Observable,double > emissionMap;
+    map<hiddenState*,double> transitionMap;
+    map<Observable*,double > emissionMap;
     double initialChance;
 
     hiddenState();
 
-    hiddenState(int id, const map<hiddenState, double> &transitionMap, const map<Observable, double> &emissionMap,
+    hiddenState(int id, const map<hiddenState*, double> &transitionMap, const map<Observable*, double> &emissionMap,
                 double initialChance);
 
 
