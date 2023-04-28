@@ -8,7 +8,7 @@ HMM::HMM(const vector<hiddenState*> &hiddenStates, const vector<Observable*> &ob
 }
 bool HMM::checkValues() {
     for(auto state:hiddenStates){
-        if (!state.isValid()){
+        if (!state->isValid()){
             return false;
         }
     }

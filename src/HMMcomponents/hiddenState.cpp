@@ -8,7 +8,7 @@ hiddenState::hiddenState(int id, const map<hiddenState*, double> &transitionMap,
         transitionMap), emissionMap(emissionMap), initialChance(initialChance) {}
 
 bool hiddenState::isValid() {
-    double sum;
+    double sum=0;
     for (auto& pair:transitionMap){
         sum += pair.second;
     }
@@ -22,4 +22,5 @@ bool hiddenState::isValid() {
     if (abs(sum - 1) >= 1e-12){
         return false;
     }
+    return true;
 }
