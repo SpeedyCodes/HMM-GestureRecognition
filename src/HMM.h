@@ -14,7 +14,7 @@ public:
 
     bool checkValues();
 
-    double likelihood(std::vector<Observable>observations);
+    double likelihood(std::vector<Observable*>observations);
 };
 
 
