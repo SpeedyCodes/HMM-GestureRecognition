@@ -14,17 +14,21 @@ public:
 
     bool checkValues();
 
+    void train(const vector<int> &data, int iterations);
+
+    void train(const vector<vector<int> >&dataVector, int iterations);
+
+    void print();
+
+private:
+
     vector<vector<double>> calculateAlpha(const vector<int>& data);
 
     vector<vector<double>> calculateBeta(const vector<int>& data);
 
-    void train(const vector<int> &data, int iterations);
-
     Observable* getObservable(int id);
 
     double calculateDenominator(const vector<int> &data, vector<vector<double>> &alpha, vector<vector<double>> &beta, int t);
-
-    void print();
 };
 
 

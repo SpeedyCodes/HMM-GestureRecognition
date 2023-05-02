@@ -14,67 +14,6 @@ bool HMM::checkValues() {
     return true;
 }
 
-vector<vector<double>> HMM::calculateAlpha(const vector<int>& data) {
-    vector<vector<double>> alpha;
-    for (int i = 0; i != data.size(); i++){
-        vector<double> tempVector;
-        for (int j = 0; j != hiddenStates.size();j++){
-            tempVector.push_back(0);
-        }
-        alpha.push_back(tempVector);
-    }
-
-    for (int i = 0; i != hiddenStates.size();i++){
-        alpha[0][i] = hiddenStates[i]->initialChance * hiddenStates[i]->emissionMap[getObservable(data[0])];
-    }
-
-    for (int t = 1; t != data.size();t++){
-        for (int j = 0; j != hiddenStates.size();j++){
-            double newValue = 0;
-            int index = 0;
-            for (int i = 0; i != hiddenStates.size(); i++){
-                newValue += alpha[t-1][index] * hiddenStates[i]->transitionMap[hiddenStates[j]];
-                index++;
-            }
-            alpha[t][j] = newValue * hiddenStates[j]->emissionMap[getObservable(data[t])];
-        }
-    }
-    return alpha;
-}
-
-vector<vector<double>> HMM::calculateBeta(const vector<int> &data) {
-    vector<vector<double>> beta;
-
-    for (int i = 0; i != data.size(); i++){
-        vector<double> tempVector;
-        for (int j = 0; j != hiddenStates.size();j++){
-            tempVector.push_back(0);
-        }
-        beta.push_back(tempVector);
-    }
-
-    for (double & i : beta[data.size()-1]){
-        i = 1;
-    }
-
-    for (int t = data.size()-2; t >= 0; t--){
-        for (int j = 0; j !=  hiddenStates.size(); j++){
-            double newValue = 0;
-            int index = 0;
-            vector<double> temp = beta[t+1];
-            for (auto& chance:temp){
-                chance = chance * hiddenStates[index]->emissionMap[getObservable(data[t+1])];
-                index++;
-            }
-            for (index=0;index != hiddenStates.size();index++){
-                newValue += temp[index] * hiddenStates[j]->transitionMap[hiddenStates[index]];
-            }
-            beta[t][j] = newValue;
-        }
-    }
-    return beta;
-}
-
 void HMM::train(const vector<int> &data, int iterations) {
     int M = hiddenStates.size();
     int T = data.size();
@@ -181,6 +120,73 @@ void HMM::train(const vector<int> &data, int iterations) {
         }
     }
     checkValues();
+}
+
+void HMM::train(const vector<vector<int>> &dataVector, int iterations) {
+    for(const auto& data:dataVector){
+        train(data,iterations);
+    }
+}
+
+vector<vector<double>> HMM::calculateAlpha(const vector<int>& data) {
+    vector<vector<double>> alpha;
+    for (int i = 0; i != data.size(); i++){
+        vector<double> tempVector;
+        for (int j = 0; j != hiddenStates.size();j++){
+            tempVector.push_back(0);
+        }
+        alpha.push_back(tempVector);
+    }
+
+    for (int i = 0; i != hiddenStates.size();i++){
+        alpha[0][i] = hiddenStates[i]->initialChance * hiddenStates[i]->emissionMap[getObservable(data[0])];
+    }
+
+    for (int t = 1; t != data.size();t++){
+        for (int j = 0; j != hiddenStates.size();j++){
+            double newValue = 0;
+            int index = 0;
+            for (int i = 0; i != hiddenStates.size(); i++){
+                newValue += alpha[t-1][index] * hiddenStates[i]->transitionMap[hiddenStates[j]];
+                index++;
+            }
+            alpha[t][j] = newValue * hiddenStates[j]->emissionMap[getObservable(data[t])];
+        }
+    }
+    return alpha;
+}
+
+vector<vector<double>> HMM::calculateBeta(const vector<int> &data) {
+    vector<vector<double>> beta;
+
+    for (int i = 0; i != data.size(); i++){
+        vector<double> tempVector;
+        for (int j = 0; j != hiddenStates.size();j++){
+            tempVector.push_back(0);
+        }
+        beta.push_back(tempVector);
+    }
+
+    for (double & i : beta[data.size()-1]){
+        i = 1;
+    }
+
+    for (int t = data.size()-2; t >= 0; t--){
+        for (int j = 0; j !=  hiddenStates.size(); j++){
+            double newValue = 0;
+            int index = 0;
+            vector<double> temp = beta[t+1];
+            for (auto& chance:temp){
+                chance = chance * hiddenStates[index]->emissionMap[getObservable(data[t+1])];
+                index++;
+            }
+            for (index=0;index != hiddenStates.size();index++){
+                newValue += temp[index] * hiddenStates[j]->transitionMap[hiddenStates[index]];
+            }
+            beta[t][j] = newValue;
+        }
+    }
+    return beta;
 }
 
 Observable *HMM::getObservable(int id) {
