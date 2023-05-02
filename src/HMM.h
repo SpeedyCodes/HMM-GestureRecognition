@@ -22,6 +22,8 @@ public:
 
     void print();
 
+    map<int, double> learnDistributionFromSamples(vector<std::vector<int>> samples);
+
 private:
 
     vector<vector<double>> calculateAlpha(const vector<int>& data);
@@ -31,6 +33,7 @@ private:
     Observable* getObservable(int id);
 
     double calculateDenominator(const vector<int> &data, vector<vector<double>> &alpha, vector<vector<double>> &beta, int t);
+
 };
 
 

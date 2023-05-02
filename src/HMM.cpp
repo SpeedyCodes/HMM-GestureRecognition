@@ -48,6 +48,8 @@ double HMM::likelihood(std::vector<Observable*>observations){
     return totalChance;
 }
 
+
+
 void HMM::train(const vector<int> &data, int iterations) {
     int M = hiddenStates.size();
     int T = data.size();
@@ -269,4 +271,25 @@ void HMM::print() {
         }
         cout << endl;
     }
+}
+
+std::map<int, double>HMM::learnDistributionFromSamples(std::vector<std::vector<int>>samples){
+    std::map<int, double> grade;
+    int amount = samples.size()*samples[0].size();
+    for(int i = 0; i<samples.size(); i++){
+        for(int j = 0; j<samples[i].size(); j++){
+            if(grade.count(samples[i][j]) == 0){
+                grade[samples[i][j]] = 1;
+            }
+            else{
+                grade[samples[i][j]] += 1;
+            }
+        }
+    }
+    map<int, double>::iterator it;
+    for (it = grade.begin(); it != grade.end(); it++)
+    {
+        it->second = it->second/amount;
+    }
+    return grade;
 }
