@@ -13,7 +13,7 @@ public:
     HMM(const vector<hiddenState*> &hiddenStates, const vector<Observable*> &observables);
 
     bool checkValues();
-
+    
     double likelihood(std::vector<Observable*>observations);
 
     void train(const vector<int> &data, int iterations);

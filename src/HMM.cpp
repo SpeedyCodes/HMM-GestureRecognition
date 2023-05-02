@@ -2,7 +2,6 @@
 
 HMM::HMM(const vector<hiddenState*> &hiddenStates, const vector<Observable*> &observables) : hiddenStates(hiddenStates),
                                                                                 observables(observables) {
-
     checkValues();
 }
 bool HMM::checkValues() {
@@ -14,8 +13,6 @@ bool HMM::checkValues() {
     }
     return true;
 }
-
-
 
 double HMM::likelihood(std::vector<Observable*>observations){
 
