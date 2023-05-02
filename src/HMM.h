@@ -7,12 +7,28 @@
 #include "src/HMMcomponents/Observable.h"
 
 class HMM {
-vector<hiddenState> hiddenStates;
-vector<Observable> observables;
+vector<hiddenState*> hiddenStates;
+vector<Observable*> observables;
 public:
-    HMM(const vector<hiddenState> &hiddenStates, const vector<Observable> &observables);
+    HMM(const vector<hiddenState*> &hiddenStates, const vector<Observable*> &observables);
 
     bool checkValues();
+
+    void train(const vector<int> &data, int iterations);
+
+    void train(const vector<vector<int> >&dataVector, int iterations);
+
+    void print();
+
+private:
+
+    vector<vector<double>> calculateAlpha(const vector<int>& data);
+
+    vector<vector<double>> calculateBeta(const vector<int>& data);
+
+    Observable* getObservable(int id);
+
+    double calculateDenominator(const vector<int> &data, vector<vector<double>> &alpha, vector<vector<double>> &beta, int t);
 };
 
 
