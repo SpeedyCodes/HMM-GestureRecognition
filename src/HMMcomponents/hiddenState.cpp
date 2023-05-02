@@ -8,7 +8,7 @@ hiddenState::hiddenState(int id, const map<hiddenState*, double> &transitionMap,
         transitionMap), emissionMap(emissionMap), initialChance(initialChance) {}
 
 bool hiddenState::isValid() {
-    double sum=0;
+    double sum = 0;
     for (auto& pair:transitionMap){
         sum += pair.second;
     }
