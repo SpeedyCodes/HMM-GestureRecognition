@@ -14,6 +14,8 @@ public:
 
     bool checkValues();
 
+    double likelihood(std::vector<Observable*>observations);
+
     void train(const vector<int> &data, int iterations);
 
     void train(const vector<vector<int> >&dataVector, int iterations);
