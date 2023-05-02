@@ -1,0 +1,28 @@
+{
+  "gestureID": "wave",
+  "HMM": {
+    "hiddenStates": [
+      {
+        "id": 0,
+        "initialProbability": 1.00,
+        "transitions": [
+          {
+            "id": 0,
+            "probability": 1.00
+          }
+        ],
+        "emissions": [
+          {
+            "id": 0,
+            "probability": 0.5
+          },
+          {
+            "id": 1,
+            "probability": 0.5
+          }
+        ]
+      }
+    ],
+    "observables": [0, 1]
+  }
+}
