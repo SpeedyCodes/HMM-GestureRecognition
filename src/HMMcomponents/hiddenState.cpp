@@ -4,7 +4,7 @@
 hiddenState::hiddenState() {}
 
 hiddenState::hiddenState(int id, const map<hiddenState*, double> &transitionMap,
-                         const map<Observable*, double> &emissionMap, double initialChance) : id(id), transitionMap(
+                         const map<Observable, double> &emissionMap, double initialChance) : id(id), transitionMap(
         transitionMap), emissionMap(emissionMap), initialChance(initialChance) {}
 
 bool hiddenState::isValid() {

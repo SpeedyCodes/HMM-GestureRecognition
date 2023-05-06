@@ -33,10 +33,10 @@ Gesture::Gesture(const string &saveFilePath, bool &success) {
     //Read the HMM data
     auto& hmmData = data["HMM"];
     map<int, hiddenState*> hiddenStates;
-    map<int, Observable*> observables;
-    for (auto& observable : hmmData["observables"]) {
-        int id = observable.get<int>();
-        observables[id] = new Observable(id);
+    map<int, Observable> observables;
+    for (auto& observableData : hmmData["observables"]) {
+        int observableId = observableData.get<int>();
+        observables[observableId] = observableId;
     }
     for(auto& hiddenStateData : hmmData["hiddenStates"]){
         int id = hiddenStateData["id"].get<int>();
@@ -54,11 +54,11 @@ Gesture::Gesture(const string &saveFilePath, bool &success) {
         }
         for (auto& emissionData: hiddenStateData["emissions"]) {
             hiddenstate->emissionMap.insert({observables.at(emissionData["id"].get<int>()),
-                                               emissionData["probability"].get<double>()});
+                                             emissionData["probability"].get<double>()});
         }
     }
     vector<hiddenState*> hiddenStatesFinal;
-    vector<Observable*> observablesFinal;
+    vector<Observable> observablesFinal;
     for(auto& state: hiddenStates) {
         hiddenStatesFinal.push_back(state.second);
     }

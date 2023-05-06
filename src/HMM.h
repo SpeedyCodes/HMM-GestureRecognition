@@ -4,33 +4,31 @@
 #include <iostream>
 #include <vector>
 #include "src/HMMcomponents/hiddenState.h"
-#include "src/HMMcomponents/Observable.h"
 
 class HMM {
 vector<hiddenState*> hiddenStates;
-vector<Observable*> observables;
+vector<Observable> observables;
 public:
-    HMM(const vector<hiddenState*> &hiddenStates, const vector<Observable*> &observables);
+    HMM(const vector<hiddenState*> &hiddenStates, const vector<Observable> &observables);
 
     bool checkValues();
     
-    double likelihood(std::vector<Observable*>observations);
+    double likelihood(std::vector<Observable>& observations);
 
-    void train(const vector<int> &data, int iterations);
+    bool train(const vector<Observable> &data, int iterations);
 
-    void train(const vector<vector<int> >&dataVector, int iterations);
+    void train(const vector<vector<Observable> >&dataVector, int iterations);
 
     void print();
 
 private:
 
-    vector<vector<double>> calculateAlpha(const vector<int>& data);
+    vector<vector<double>> calculateAlpha(const vector<Observable>& data);
 
-    vector<vector<double>> calculateBeta(const vector<int>& data);
+    vector<vector<double>> calculateBeta(const vector<Observable>& data);
 
-    Observable* getObservable(int id);
-
-    double calculateDenominator(const vector<int> &data, vector<vector<double>> &alpha, vector<vector<double>> &beta, int t);
+    double calculateDenominator(const vector<Observable> &data, vector<vector<double>> &alpha,
+                                vector<vector<double>> &beta, int t);
 };
 
 
