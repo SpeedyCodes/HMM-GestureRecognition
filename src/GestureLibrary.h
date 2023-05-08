@@ -15,6 +15,7 @@ class HMM;
 class GestureLibrary {
 private:
     std::map<std::string, Gesture> gestures;
+    std::map <int, std::vector<Observable > > possibleObservables; // Channel number (from 0), ids of possible observables
     std::vector<Observable > accumulatedLiveFeedData;
     HMM* getThresholdHMM() const;
 public:
@@ -22,7 +23,7 @@ public:
     void fromDirectory(std::string& directory);
     void toDirectory(std::string& directory) const;
     bool modelTrainingAndSelection(std::vector<std::vector<Observable>>& observed, std::string gestureID);
-    std::string recognizeGesture(std::vector<Observable>& observed) const;
+    std::string recognizeGesture(std::vector<Observable>& observed, double& likelihood) const;
     bool isolatedRecognition(std::string& videoPath, std::string& gestureID);
     bool realtimeRecognition(std::string& gestureID);
 };

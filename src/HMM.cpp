@@ -269,3 +269,7 @@ void HMM::print() {
         cout << endl;
     }
 }
+
+const vector<hiddenState *> &HMM::getHiddenStates() const {
+    return hiddenStates;
+}
