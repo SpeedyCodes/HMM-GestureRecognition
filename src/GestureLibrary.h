@@ -5,6 +5,8 @@
 #ifndef HMM_GESTURERECOGNITION_GESTURELIBRARY_H
 #define HMM_GESTURERECOGNITION_GESTURELIBRARY_H
 #include <iostream>
+#include <vector>
+#include <map>
 
 typedef int Observable;
 class Gesture;
@@ -17,9 +19,9 @@ private:
     HMM* getThresholdHMM() const;
 public:
     GestureLibrary();
-    void fromDirectory(std::string& directory="/gestures");
-    void toDirectory(std::string& directory="/gestures") const;
-    bool modelTrainingAndSelection(std::vector<std::vector<Observable>&, std::string gestureID);
+    void fromDirectory(std::string& directory);
+    void toDirectory(std::string& directory) const;
+    bool modelTrainingAndSelection(std::vector<std::vector<Observable>>& observed, std::string gestureID);
     std::string recognizeGesture(std::vector<Observable>& observed) const;
     bool isolatedRecognition(std::string& videoPath, std::string& gestureID);
     bool realtimeRecognition(std::string& gestureID);

@@ -66,7 +66,7 @@ Gesture::Gesture(const string &saveFilePath, bool &success) {
         observablesFinal.push_back(observable.second);
     }
     hiddenMarkovModel = new HMM(hiddenStatesFinal, observablesFinal);
-    json j = *hiddenMarkovModel;
+    //json j = *hiddenMarkovModel;
 
     success = true;
 }

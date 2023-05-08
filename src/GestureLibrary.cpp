@@ -3,3 +3,9 @@
 //
 
 #include "GestureLibrary.h"
+#include "HMM.h"
+
+HMM* GestureLibrary::getThresholdHMM() const{
+//    HMM* thresholdHMM = new HMM;
+//    return thresholdHMM;
+}
