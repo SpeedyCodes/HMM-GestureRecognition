@@ -147,7 +147,7 @@ bool HMM::train(const vector<Observable> &data, int iterations) {
             for (int i = 0; i != hiddenStates.size(); i++){
                 double newVal = 0;
                 for (int j = 0; j != data.size(); j++){
-                    if (data[j]==observable->id){
+                    if (data[j]==observable){
                            newVal += gamma[i][j];
                     }
                 }
@@ -268,4 +268,8 @@ void HMM::print() {
         }
         cout << endl;
     }
+}
+
+const vector<hiddenState *> &HMM::getHiddenStates() const {
+    return hiddenStates;
 }

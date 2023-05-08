@@ -8,5 +8,5 @@ include_directories(. lib)
 add_executable(HMM_GestureRecognition
         src/HMM.cpp
         src/HMM.h src/HMMcomponents/hiddenState.h src/HMMcomponents/hiddenState.cpp
-        src/Gesture.cpp src/Gesture.h)
+        src/Gesture.cpp src/Gesture.h src/GestureLibrary.cpp src/GestureLibrary.h)
 
