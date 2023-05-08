@@ -1,7 +1,3 @@
-//
-// Created by dasha on 08.05.2023.
-//
-
 #ifndef HMM_GESTURERECOGNITION_GESTURELIBRARY_H
 #define HMM_GESTURERECOGNITION_GESTURELIBRARY_H
 #include <iostream>
@@ -17,9 +13,11 @@ private:
     std::map<std::string, Gesture> gestures;
     std::map <int, std::vector<Observable > > possibleObservables; // Channel number (from 0), ids of possible observables
     std::vector<Observable > accumulatedLiveFeedData;
-    HMM* getThresholdHMM() const;
 public:
-    GestureLibrary();
+    GestureLibrary(){};
+    void setPossibleObservables(std::map <int, std::vector<Observable > > observables);
+    HMM* getThresholdHMM() const;
+    bool addGesture(Gesture& gesture);
     void fromDirectory(std::string& directory);
     void toDirectory(std::string& directory) const;
     bool modelTrainingAndSelection(std::vector<std::vector<Observable>>& observed, std::string gestureID);
