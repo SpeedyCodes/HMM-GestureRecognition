@@ -1,9 +1,62 @@
+#include <fstream>
 #include "HMM.h"
+#include "json.hpp"
 
 HMM::HMM(const vector<hiddenState*> &hiddenStates, const vector<Observable*> &observables) : hiddenStates(hiddenStates),
                                                                                 observables(observables) {
     checkValues();
 }
+
+HMM::HMM(const string &saveFilePath, bool success){
+    //parse json
+    using json = nlohmann::json;
+    ifstream f(saveFilePath);
+    json data;
+    try {
+        data = json::parse(f);
+    } catch (json::exception& exception){
+        cout << exception.what();
+        success = false;
+        return;
+    }
+
+    //read the data
+    map<int, hiddenState*> hiddenStates;
+    map<int, Observable*> observables;
+    for (auto& observable : data["observables"]) {
+        int id = observable.get<int>();
+        observables[id] = new Observable(id);
+    }
+    for(auto& hiddenStateData : data["hiddenStates"]){
+        int id = hiddenStateData["id"].get<int>();
+        hiddenState* hiddenstate = new hiddenState();
+        hiddenstate->id = id;
+        hiddenStates[id] = hiddenstate;
+    }
+    for(auto& hiddenStateData : data["hiddenStates"]){
+        int id = hiddenStateData["id"].get<int>();
+        hiddenState *hiddenstate = hiddenStates[id];
+        hiddenstate->initialChance = hiddenStateData["initialProbability"].get<double>();
+        for (auto& transitionData: hiddenStateData["transitions"]) {
+            hiddenstate->transitionMap.insert({hiddenStates.at(transitionData["id"].get<int>()),
+                                               transitionData["probability"].get<double>()});
+        }
+        for (auto& emissionData: hiddenStateData["emissions"]) {
+            hiddenstate->emissionMap.insert({observables.at(emissionData["id"].get<int>()),
+                                             emissionData["probability"].get<double>()});
+        }
+    }
+    for(auto& state: hiddenStates) {
+        this->hiddenStates.push_back(state.second);
+    }
+    for(auto& observable: observables){
+        this->observables.push_back(observable.second);
+    }
+    success = true;
+}
+
+
+
 bool HMM::checkValues() {
     for(auto state:hiddenStates){
         if (!state->isValid()){

@@ -5,12 +5,20 @@
 #include <vector>
 #include "src/HMMcomponents/hiddenState.h"
 #include "src/HMMcomponents/Observable.h"
+#include "src/HMMcomponents/hiddenState.h"
 
 class HMM {
 vector<hiddenState*> hiddenStates;
 vector<Observable*> observables;
 public:
     HMM(const vector<hiddenState*> &hiddenStates, const vector<Observable*> &observables);
+
+    /**
+ * Constructor to load a HMM from a JSON file.
+ * @param saveFilePath The path to the JSON file
+ * @param success Will contain true if the HMM object was constructed correctly. False can indicate a missing or incorrect file.
+ */
+    HMM(const string &saveFilePath, bool success);
 
     bool checkValues();
     
