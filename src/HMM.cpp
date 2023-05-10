@@ -346,3 +346,46 @@ std::map<int, double>HMM::learnDistributionFromSamples(std::vector<std::vector<i
     }
     return grade;
 }
+
+
+void HMM::HMMtoJson(std::string file){
+    nlohmann::json j;
+    nlohmann::json j1;
+    std::vector<std::string>observables;
+    for(int i = 0; i<this->observables.size(); i++){
+        observables.push_back(to_string(this->observables[i]->id));
+    }
+    std::vector<nlohmann::json>hiddenStates;
+    for(int i = 0; i<this->hiddenStates.size(); i++){
+        nlohmann::json j2;
+        j2["id"] = this->hiddenStates[i]->id;
+        j2["initialProbability"] = this->hiddenStates[i]->initialChance;
+        std::vector<nlohmann::json>transitions;
+        map<hiddenState*, double>::iterator it;
+        for (it = this->hiddenStates[i]->transitionMap.begin(); it != this->hiddenStates[i]->transitionMap.end(); it++){
+            nlohmann::json j3;
+            j3["id"] = it->first->id;
+            j3["probability"] = it->second;
+            transitions.push_back(j3);
+        }
+        j2["transitions"] = transitions;
+
+        map<Observable*, double>::iterator it2;
+        std::vector<nlohmann::json>emissions;
+        for(it2 = this->hiddenStates[i]->emissionMap.begin(); it2 != this->hiddenStates[i]->emissionMap.end(); it2++){
+            nlohmann::json j4;
+            j4["id"] = it2->first->id;
+            j4["probability"] = it->second;
+            emissions.push_back(j4);
+        }
+        j2["emissions"] = emissions;
+        hiddenStates.push_back(j2);
+    }
+    j["hiddenStates"] = hiddenStates;
+    j["observables"] = observables;
+    std::cout<<std::setw(4)<<j<<std::endl;
+    std::ofstream stream;
+    stream.open(file);
+    stream<<std::setw(4)<<j<<std::endl;
+    stream.close();
+}

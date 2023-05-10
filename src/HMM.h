@@ -32,6 +32,8 @@ public:
 
     map<int, double> learnDistributionFromSamples(vector<std::vector<int>> samples);
 
+    void HMMtoJson(std::string file);
+
 private:
 
     vector<vector<double>> calculateAlpha(const vector<int>& data);
