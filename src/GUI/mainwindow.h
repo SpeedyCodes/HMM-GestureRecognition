@@ -5,8 +5,7 @@
 #include "GestureEditor.h"
 #include "SignLanguageWriter.h"
 #include "RobotConnectionManager.h"
-#include <QTcpServer>
-#include <QTcpSocket>
+#include "../MediapipeInterface/MediapipeInterface.h"
 
 
 namespace Ui {
@@ -20,8 +19,9 @@ class MainWindow : public QMainWindow
 public:
     explicit MainWindow(QWidget *parent = 0);
     ~MainWindow();
+
 public slots:
-    void acceptConnection();
+    void paintRealtimeFrame(QImage& image);
 
 private slots:
     void on_actionNew_Gesture_triggered();
@@ -29,14 +29,12 @@ private slots:
     void on_actionSign_Language_triggered();
 
     void on_actionRobot_triggered();
-    void onReadyRead();
 
 private:
     Ui::MainWindow *ui;
     SignLanguageWriter* signLanguageWriter;
     RobotConnectionManager* robotConnectionManager;
-    QTcpSocket* connection;
-    QTcpServer server;
+    MediapipeInterface mediaPipeInterface;
 
 };
 
