@@ -6,6 +6,10 @@
 
 class MediapipeInterface : public QObject {
 Q_OBJECT
+
+public:
+    ~MediapipeInterface() override;
+
 public:
     MediapipeInterface();
     bool open();
@@ -13,13 +17,16 @@ public:
 
 signals:
     void imageAvailable(QImage& image);
+    void dataAvailable(int data);
 private slots:
     void acceptConnection();
     void onDataReady();
 
 private:
-    QTcpSocket* connection;
-    QTcpServer server;
+    QTcpSocket* imageConnection;
+    QTcpSocket* dataConnection;
+    QTcpServer imageServer;
+    QTcpServer dataServer;
     bool isOpened;
 };
 

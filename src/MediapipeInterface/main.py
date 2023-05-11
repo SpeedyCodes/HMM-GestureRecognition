@@ -7,23 +7,27 @@ import imutils
 import socket
 
 HOST = "127.0.0.1"
-PORT = 5000
+IMAGEPORT = 5000
+DATAPORT = 5001
 
-with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as sock:
-    sock.connect((HOST, PORT))
-    #data = sock.recv(1024)
-    cap = cv2.VideoCapture(0)
+imageSocket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+dataSocket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+imageSocket.connect((HOST, IMAGEPORT))
+dataSocket.connect((HOST, DATAPORT))
+cap = cv2.VideoCapture(0)
+while True:
     _, frame = cap.read()
-    while True:
-        _, frame = cap.read()
-        #frame = imutils.resize(frame, width=320)
-        #frame = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
-        a = cv2.imencode('.jpg', frame)[1].tobytes()
-        sock.sendall(a)
+    #frame = imutils.resize(frame, width=320)
+    a = cv2.imencode('.jpg', frame)[1].tobytes()
+    imageSocket.sendall(a)
+    dummyValue = 280
+    bytes = dummyValue.to_bytes(4, 'big')
+    dataSocket.sendall(bytes)
 
-        k = cv2.waitKey(30) & 0xff
-        if k==27:
-            break
+    k = cv2.waitKey(30) & 0xff
+    if k==27:
+        break
+
 cap.release()
 cv2.destroyAllWindows()
 
