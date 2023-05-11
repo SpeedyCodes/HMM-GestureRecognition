@@ -11,6 +11,8 @@ vector<Observable> observables;
 public:
     HMM(const vector<hiddenState*> &hiddenStates, const vector<Observable> &observables);
 
+    const vector<hiddenState *> &getHiddenStates() const;
+
     bool checkValues();
     
     double likelihood(std::vector<Observable>& observations);
