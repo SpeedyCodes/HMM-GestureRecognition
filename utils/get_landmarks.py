@@ -82,6 +82,7 @@ def extract_keypoints(results):
     #                results.right_hand_landmarks.landmark]).flatten() if results.right_hand_landmarks else np.zeros(
     #     21 * 3)
     # try:
+            if results is None: return [0, 0]
             if results.right_hand_landmarks:
                 for res in results.right_hand_landmarks.landmark:
                     rh = [res.x, res.y]
@@ -99,13 +100,14 @@ def get_landmarks_from_video(video_path):
     """
     Collects landmarks from the given video
 
-    :param video_path: relative video path
+    :param video_path: absolute video path
     :return only necessary landmarks (array of arrays of doubles)
     """
 
     timestart = time.time()
     to_return = []
-    cap = cv2.VideoCapture(os.path.join(os.getcwd(), video_path))
+    #cap = cv2.VideoCapture(os.path.join(os.getcwd(), video_path))
+    cap = cv2.VideoCapture(video_path)
     # Set mediapipe model
     with mp_holistic.Holistic(min_detection_confidence=0.5, min_tracking_confidence=0.5) as holistic:
         while True:
@@ -122,7 +124,7 @@ def get_landmarks_from_video(video_path):
                 if cv2.waitKey(1) & 0xFF == ord('q'): break
 
     cap.release()
-    print("Total time", time.time() - timestart)
+    # print("Total time", time.time() - timestart)
     return to_return
 
-# get_landmarks_from_video("zero/zero9_0.avi")
+#get_landmarks_from_video("C:/Users/dasha/PycharmProjects/HMM-GestureRecognition/Collected_videos/zero/zero7_0.avi")

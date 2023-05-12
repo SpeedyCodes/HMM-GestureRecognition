@@ -8,7 +8,7 @@
 #include <vector>
 
 struct externManager {
-    static std::vector<std::vector<double>> getLandmarksFromVideo(const char* videoPath);
+    static std::vector<std::vector<double>> getLandmarksFromVideo(const char* absoluteVideoPath);
 };
 
 
