@@ -11,6 +11,8 @@ vector<Observable> observables;
 public:
     HMM(const vector<hiddenState*> &hiddenStates, const vector<Observable> &observables);
 
+    HMM(const string &saveFilePath, bool success);
+
     const vector<hiddenState *> &getHiddenStates() const;
 
     bool checkValues();
@@ -22,6 +24,8 @@ public:
     void train(const vector<vector<Observable> >&dataVector, int iterations);
 
     void print();
+
+    void HMMtoJson(std::string file);
 
 private:
 

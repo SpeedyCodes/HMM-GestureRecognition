@@ -1,10 +1,59 @@
+#include <fstream>
 #include "HMM.h"
 #include "algorithm"
+#include "json.hpp"
 
 HMM::HMM(const vector<hiddenState*> &hiddenStates, const vector<Observable> &observables) : hiddenStates(hiddenStates),
                                                                                 observables(observables) {
     checkValues();
 }
+
+HMM::HMM(const string &saveFilePath, bool success){
+    //parse json
+    using json = nlohmann::json;
+    ifstream f(saveFilePath);
+    json data;
+    try {
+        data = json::parse(f);
+    } catch (json::exception& exception){
+        cout << exception.what();
+        success = false;
+        return;
+    }
+
+    //read the data
+    map<int, hiddenState*> hiddenStates;
+    vector<Observable> observables;
+    for (auto& observable : data["observables"]) {
+        int id = observable.get<int>();
+        observables.push_back(id);
+    }
+    for(auto& hiddenStateData : data["hiddenStates"]){
+        int id = hiddenStateData["id"].get<int>();
+        hiddenState* hiddenstate = new hiddenState();
+        hiddenstate->id = id;
+        hiddenStates[id] = hiddenstate;
+    }
+    for(auto& hiddenStateData : data["hiddenStates"]){
+        int id = hiddenStateData["id"].get<int>();
+        hiddenState *hiddenstate = hiddenStates[id];
+        hiddenstate->initialChance = hiddenStateData["initialProbability"].get<double>();
+        for (auto& transitionData: hiddenStateData["transitions"]) {
+            hiddenstate->transitionMap.insert({hiddenStates.at(transitionData["id"].get<int>()),
+                                               transitionData["probability"].get<double>()});
+        }
+        for (auto& emissionData: hiddenStateData["emissions"]) {
+            hiddenstate->emissionMap.insert({emissionData["id"].get<int>(),
+                                             emissionData["probability"].get<double>()});
+        }
+    }
+    for(auto& state: hiddenStates) {
+        this->hiddenStates.push_back(state.second);
+    }
+    this->observables = observables;
+    success = true;
+}
+
 bool HMM::checkValues() {
     for(auto state:hiddenStates){
         if (!state->isValid()){
@@ -170,6 +219,48 @@ void HMM::train(const vector<vector<Observable>> &dataVector, int iterations) {
     }
 }
 
+void HMM::HMMtoJson(std::string file){
+    nlohmann::json j;
+    nlohmann::json j1;
+    std::vector<std::string>observables;
+    for(int i = 0; i<this->observables.size(); i++){
+        observables.push_back(to_string(this->observables[i]));
+    }
+    std::vector<nlohmann::json>hiddenStates;
+    for(int i = 0; i<this->hiddenStates.size(); i++){
+        nlohmann::json j2;
+        j2["id"] = this->hiddenStates[i]->id;
+        j2["initialProbability"] = this->hiddenStates[i]->initialChance;
+        std::vector<nlohmann::json>transitions;
+        map<hiddenState*, double>::iterator it;
+        for (it = this->hiddenStates[i]->transitionMap.begin(); it != this->hiddenStates[i]->transitionMap.end(); it++){
+            nlohmann::json j3;
+            j3["id"] = it->first->id;
+            j3["probability"] = it->second;
+            transitions.push_back(j3);
+        }
+        j2["transitions"] = transitions;
+
+        map<Observable, double>::iterator it2;
+        std::vector<nlohmann::json>emissions;
+        for(it2 = this->hiddenStates[i]->emissionMap.begin(); it2 != this->hiddenStates[i]->emissionMap.end(); it2++){
+            nlohmann::json j4;
+            j4["id"] = it2->first;
+            j4["probability"] = it->second;
+            emissions.push_back(j4);
+        }
+        j2["emissions"] = emissions;
+        hiddenStates.push_back(j2);
+    }
+    j["hiddenStates"] = hiddenStates;
+    j["observables"] = observables;
+    std::cout<<std::setw(4)<<j<<std::endl;
+    std::ofstream stream;
+    stream.open(file);
+    stream<<std::setw(4)<<j<<std::endl;
+    stream.close();
+}
+
 vector<vector<double>> HMM::calculateAlpha(const vector<Observable>& data) {
     vector<vector<double>> alpha;
     for (int i = 0; i != data.size(); i++){
@@ -273,3 +364,5 @@ void HMM::print() {
 const vector<hiddenState *> &HMM::getHiddenStates() const {
     return hiddenStates;
 }
+
+
