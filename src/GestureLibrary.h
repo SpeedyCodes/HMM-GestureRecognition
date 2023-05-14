@@ -24,6 +24,14 @@ public:
     std::string recognizeGesture(std::vector<Observable>& observed, double& likelihood) const;
     bool isolatedRecognition(std::string& videoPath, std::string& gestureID);
     bool realtimeRecognition(std::string& gestureID);
+    bool fitAndSelect(std::vector<std::vector<Observable> > GestureData, int iterations, const std::string& gestureID);
+
+private:
+    HMM* createThreeStateHMM(const std::map<Observable, double>& emissionMap, const std::vector<Observable>& observables);
+
+    HMM* createFourStateHMM(const std::map<Observable, double>& emissionMap, const std::vector<Observable>& observables);
+
+    HMM* createFiveStateHMM(const std::map<Observable, double>& emissionMap, const std::vector<Observable>& observables);
 };
 
 
