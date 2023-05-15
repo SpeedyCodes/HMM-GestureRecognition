@@ -1,9 +1,9 @@
 #include "externManager.h"
+#include <cmath>
 #pragma push_macro("slots")
 #undef slots
 #include <Python.h>
 #pragma pop_macro("slots")
-//#include "C:\Users\dasha\AppData\Local\Programs\Python\Python310\include\Python.h"
 
 std::vector<std::vector<double>> externManager::getLandmarksFromVideo(const char* videoPath){
     Py_Initialize();
@@ -71,4 +71,47 @@ std::vector<std::vector<double>> externManager::getLandmarksFromVideo(const char
     Py_Finalize();
 
     return result;
+}
+std::vector<int> externManager::preprocessData(const std::vector<std::vector<double>>& data){
+    const int magicNumber = 20; // parameter of the vector quantization
+    std::vector<int> to_return;
+    if(data.size() < 2){
+        std::cerr << "The given vector of data is empty or has only one element" << std::endl;
+        return to_return;
+    }
+    std::vector<double> previousFrameData;
+    bool firstFrame = true;
+    for(const std::vector<double>& frameData: data){
+        if(firstFrame){
+            previousFrameData = frameData;
+            firstFrame = false;
+        }else{
+            double angle; // We use angle as the feature
+            if(frameData[0] - previousFrameData[0] != 0){
+                // Use arctan
+                angle = atan((frameData[1] - previousFrameData[1])/(frameData[0] - previousFrameData[0]));
+            }else if(frameData[1] - previousFrameData[1] > 0){
+                angle = M_PI/2;
+            }else if(frameData[1] - previousFrameData[1] < 0){
+                angle = -M_PI/2;
+            }else{ // 0/0 => 0
+                angle = 0;
+            }
+            // TODO: special number for absent observations + remove end trash?
+            angle = angle * 180.0 / M_PI; // Set to degrees
+            if(angle < 0) angle += 360;
+            angle /= magicNumber;
+            to_return.push_back(static_cast<int>(std::round(angle)));
+            previousFrameData = frameData;
+        }
+    }
+    return to_return;
+}
+std::vector<std::vector<int>> externManager::preprocessData(const std::vector<std::vector<std::vector<double>>>& data){
+    std::vector<std::vector<int>> to_return;
+    for(const std::vector<std::vector<double>>& singleVector: data){
+        std::vector<int> to_add = preprocessData(singleVector);
+        to_return.push_back(to_add);
+    }
+    return to_return;
 }

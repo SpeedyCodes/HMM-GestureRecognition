@@ -9,6 +9,8 @@
 
 struct externManager {
     static std::vector<std::vector<double>> getLandmarksFromVideo(const char* absoluteVideoPath);
+    static std::vector<int> preprocessData(const std::vector<std::vector<double>>& data);
+    static std::vector<std::vector<int>> preprocessData(const std::vector<std::vector<std::vector<double>>>& data);
 };
 
 
