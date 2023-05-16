@@ -69,3 +69,7 @@ Gesture::Gesture(const string &saveFilePath, bool &success) {
 
     success = true;
 }
+
+void Gesture::setHiddenMarkovModel(HMM *hiddenMarkovModel) {
+    Gesture::hiddenMarkovModel = hiddenMarkovModel;
+}

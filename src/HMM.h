@@ -13,11 +13,15 @@ public:
 
     HMM(const string &saveFilePath, bool success);
 
+    virtual ~HMM();
+
     const vector<hiddenState *> &getHiddenStates() const;
 
     bool checkValues();
-    
+
     double likelihood(std::vector<Observable>& observations);
+
+    double likelihood(std::vector<std::vector<Observable> > observations);
 
     bool train(const vector<Observable> &data, int iterations);
 

@@ -8,6 +8,12 @@ HMM::HMM(const vector<hiddenState*> &hiddenStates, const vector<Observable> &obs
     checkValues();
 }
 
+HMM::~HMM() {
+    for (auto state:hiddenStates){
+        delete state;
+    }
+}
+
 HMM::HMM(const string &saveFilePath, bool success){
     //parse json
     using json = nlohmann::json;
@@ -98,8 +104,21 @@ double HMM::likelihood(std::vector<Observable>& observations){
     return totalChance;
 }
 
+double HMM::likelihood(std::vector<std::vector<Observable>> observations) {
+    double totalChance = 0;
+    for (auto& observationVector:observations){
+        totalChance += likelihood(observationVector);
+    }
+    totalChance /= observations.size();
+    return totalChance;
+}
+
 bool HMM::train(const vector<Observable> &data, int iterations) {
-    for (Observable observable: data) {
+    if (data.empty()){
+        cerr << "No data was given to train with" << endl;
+        return false;
+    }
+    for (Observable observable: data) {                                                         //TODO als er unregognized observables zijn, moet het direct stoppen of gwn deze observables er uit halen?
         if(find(observables.begin(), observables.end(), observable) == observables.end()){
             cerr << "Data contains some unrecognized observables" << endl;
             return false;

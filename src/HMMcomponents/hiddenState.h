@@ -16,6 +16,8 @@ public:
 
     hiddenState();
 
+    hiddenState(int id, double initialChance) : id(id), initialChance(initialChance) {}
+
     hiddenState(int id, const map<hiddenState*, double> &transitionMap, const map<Observable, double> &emissionMap,
                 double initialChance);
 
