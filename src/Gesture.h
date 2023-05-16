@@ -36,6 +36,8 @@ public:
 
     HMM *getHiddenMarkovModel() const;
 
+    void setHiddenMarkovModel(HMM *hiddenMarkovModel);
+
 private:
     string id;
     HMM* hiddenMarkovModel;
