@@ -56,7 +56,8 @@ HMM* GestureLibrary::getThresholdHMM() const{
 }
 
 bool
-GestureLibrary::fitAndSelect(std::vector<std::vector<Observable> > GestureData, int iterations, const std::string& gestureID) {
+GestureLibrary::fitAndSelect(std::vector<std::vector<Observable> > GestureData, const std::string &gestureID,
+                             double threshold) {
     //check if GestureData contains at least 3 vectors
     if (GestureData.size() < 3){
         cerr << "Not enough data to fit and select a model" << endl;
@@ -135,13 +136,13 @@ GestureLibrary::fitAndSelect(std::vector<std::vector<Observable> > GestureData, 
         trainingVector.erase(beginIt, endIt);
 
         //train and test all HMMs
-        threeStateHMM->train(trainingVector, iterations);
+        threeStateHMM->autoTrain(trainingVector, threshold);
         successRateThreeStateHMM += threeStateHMM->likelihood(testLikelihoodVector);
 
-        fourStateHMM->train(trainingVector, iterations);
+        fourStateHMM->autoTrain(trainingVector, threshold);
         successRateFourStateHMM += fourStateHMM->likelihood(testLikelihoodVector);
 
-        fiveStateHMM->train(trainingVector, iterations);
+        fiveStateHMM->autoTrain(trainingVector, threshold);
         successRateFiveStateHMM += fiveStateHMM->likelihood(testLikelihoodVector);
 
         //delete test HMMs
@@ -156,7 +157,7 @@ GestureLibrary::fitAndSelect(std::vector<std::vector<Observable> > GestureData, 
     if (successRateThreeStateHMM == highestSuccessRate){
         //create HMM with three states and train it
         HMM* threeStateHMM = createThreeStateHMM(emissionMap,observables);
-        threeStateHMM->train(GestureData,iterations);
+        threeStateHMM->autoTrain(GestureData, threshold);
 
         //assign selected model to the gesture
         gestures.at(gestureID).setHiddenMarkovModel(threeStateHMM);
@@ -164,7 +165,7 @@ GestureLibrary::fitAndSelect(std::vector<std::vector<Observable> > GestureData, 
     else if (successRateFourStateHMM == highestSuccessRate){
         //create HMM with four states and train it
         HMM* fourStateHMM = createFourStateHMM(emissionMap,observables);
-        fourStateHMM->train(GestureData,iterations);
+        fourStateHMM->autoTrain(GestureData, threshold);
 
         //assign selected model to the gesture
         gestures.at(gestureID).setHiddenMarkovModel(fourStateHMM);
@@ -172,7 +173,7 @@ GestureLibrary::fitAndSelect(std::vector<std::vector<Observable> > GestureData, 
     else {
         //create HMM with five states and train it
         HMM* fiveStateHMM = createFiveStateHMM(emissionMap,observables);
-        fiveStateHMM->train(GestureData,iterations);
+        fiveStateHMM->autoTrain(GestureData, threshold);
 
         //assign selected model to the gesture
         gestures.at(gestureID).setHiddenMarkovModel(fiveStateHMM);

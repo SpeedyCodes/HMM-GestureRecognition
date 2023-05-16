@@ -24,7 +24,8 @@ public:
     std::string recognizeGesture(std::vector<Observable>& observed, double& likelihood) const;
     bool isolatedRecognition(std::string& videoPath, std::string& gestureID);
     bool realtimeRecognition(std::string& gestureID);
-    bool fitAndSelect(std::vector<std::vector<Observable> > GestureData, int iterations, const std::string& gestureID);
+    bool
+    fitAndSelect(std::vector<std::vector<Observable> > GestureData, const std::string &gestureID, double threshold = 0.0001);
 
 private:
     HMM* createThreeStateHMM(const std::map<Observable, double>& emissionMap, const std::vector<Observable>& observables);
