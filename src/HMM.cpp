@@ -400,12 +400,12 @@ bool HMM::autoTrain(const vector<vector<Observable> > &dataVector, double thresh
     bool success = false;
     success = train(dataVector,1);
     if (!success){
-        cerr << "training failed, was there something wrong the given data?" << endl;
+        cerr << "training failed, was there something wrong with the given data?" << endl;
         return false;
     }
 
     // check if any transition or emission chances got changed by more than the given threshold
-    // if so, stop training
+    // if so, continue training
     bool alreadyTrained = false;
     for (auto i = 0; i != hiddenStates.size(); i++){
         for (auto state:hiddenStates){
@@ -425,6 +425,6 @@ bool HMM::autoTrain(const vector<vector<Observable> > &dataVector, double thresh
         }
         if (alreadyTrained) break;
     }
-    // otherwise keep training
+    // otherwise stop training
     return true;
 }
