@@ -17,7 +17,7 @@ public:
 
 signals:
     void imageAvailable(QImage& image);
-    void dataAvailable(int data);
+    void dataAvailable(std::vector<double> data);
 private slots:
     void acceptConnection();
     void onDataReady();

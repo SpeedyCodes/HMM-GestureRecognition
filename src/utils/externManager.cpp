@@ -16,10 +16,10 @@ std::vector<std::vector<double>> externManager::getLandmarksFromVideo(const char
     PyObject* sys_module = PyImport_ImportModule("sys");
     PyObject* path = PyObject_GetAttrString(sys_module, "path");
     PyList_Append(path, PyUnicode_FromString(cwd));
-    PyList_Append(path, PyUnicode_FromString("utils"));
+    PyList_Append(path, PyUnicode_FromString("src/utils"));
     Py_DECREF(sys_module);
 
-    // Import the "collect_data" module
+    // Import the "get_landmarks" module
     PyObject* module_name = PyUnicode_FromString("get_landmarks");
     PyObject* module = PyImport_Import(module_name);
     Py_DECREF(module_name);
@@ -28,7 +28,7 @@ std::vector<std::vector<double>> externManager::getLandmarksFromVideo(const char
         PyErr_Print();
     }
 
-    // Get a reference to the "start_collection" function
+    // Get a reference to the "get_landmarks_from_video" function
     PyObject* func_name = PyUnicode_FromString("get_landmarks_from_video");
     PyObject* func = PyObject_GetAttr(module, func_name);
     Py_DECREF(func_name);
@@ -42,12 +42,12 @@ std::vector<std::vector<double>> externManager::getLandmarksFromVideo(const char
     // Set arguments
     PyObject* py_absoluteVideoPath = PyUnicode_FromString(videoPath);
     PyObject *args = PyTuple_Pack(1, py_absoluteVideoPath);
-    // Call the function with no arguments
+    // Call the function
     PyObject* pResult = PyObject_CallObject(func, args);
 
-    // Extract result
+    // Extract results
     std::vector<std::vector<double>> result;
-    if(pResult == NULL) std::cerr << "Got nothing from get_landmarks_from_video.py. Did you give the absolute path?"  << std::endl;
+    if(pResult == NULL) std::cerr << "Got nothing from get_landmarks.py. Did you give the absolute path?"  << std::endl;
     if (PyList_Check(pResult)) {
         Py_ssize_t outerSize = PyList_Size(pResult);
         for (Py_ssize_t i = 0; i < outerSize; ++i) {
