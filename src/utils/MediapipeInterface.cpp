@@ -55,58 +55,24 @@ bool MediapipeInterface::open() {
     imageServer.listen(QHostAddress::Any, 5000);
     connect(&dataServer, &QTcpServer::newConnection, this, &MediapipeInterface::acceptConnection);
     dataServer.listen(QHostAddress::Any, 5001);
-
-    Py_Initialize();
-
-    char cwd[1024];
-    if (getcwd(cwd, sizeof(cwd)) == NULL) {
-        std::cerr << "Error getting current working directory" << std::endl;
-    }
-    // Get the right file
-    PyObject* sys_module = PyImport_ImportModule("sys");
-    PyObject* path = PyObject_GetAttrString(sys_module, "path");
-    PyList_Append(path, PyUnicode_FromString(cwd));
-    PyList_Append(path, PyUnicode_FromString("src/utils"));
-    Py_DECREF(sys_module);
-
-    // Import the "run_tcp" module
-    PyObject* module_name = PyUnicode_FromString("run_tcp");
-    PyObject* module = PyImport_Import(module_name);
-    Py_DECREF(module_name);
-
-    if (module == NULL) {
-        PyErr_Print();
-    }
-
-    // Get a reference to the "run_tcp_sewer" function
-    PyObject* func_name = PyUnicode_FromString("run_tcp_sewer");
-    PyObject* func = PyObject_GetAttr(module, func_name);
-    Py_DECREF(func_name);
-
-    if (!PyCallable_Check(func)) {
-        Py_DECREF(func);
-        Py_DECREF(module);
-        PyErr_Print();
-    }
-
-    // Call the function with no arguments
-    PyObject_CallObject(func, NULL);
-
-    // Clean up
-    Py_DECREF(func);
-    Py_DECREF(module);
-    Py_Finalize();
-
+    pythonClients = new PythonThread();
+    connect(pythonClients, &PythonThread::finished, pythonClients, &QObject::deleteLater);
+    pythonClients->start();
     isOpened = true;
-    return true;
+    return isOpened;
 }
 
 bool MediapipeInterface::close() {
     if(!isOpened) return false;
+    disconnect(&imageServer, &QTcpServer::newConnection, this, &MediapipeInterface::acceptConnection);
+    disconnect(&dataServer, &QTcpServer::newConnection, this, &MediapipeInterface::acceptConnection);
     imageConnection->write(QByteArray::fromStdString("abort"));
     imageConnection->abort();
+    dataConnection->write(QByteArray::fromStdString("abort"));
     dataConnection->abort();
-    return true;
+    pythonClients->terminate(); //TODO replace with something a little more memory-safe https://stackoverflow.com/questions/45927337/recieve-data-only-if-available-in-python-sockets
+    isOpened = false;
+    return isOpened;
 }
 
 MediapipeInterface::~MediapipeInterface() {
@@ -221,4 +187,51 @@ std::vector<std::vector<int>> MediapipeInterface::preprocessData(const std::vect
         to_return.push_back(to_add);
     }
     return to_return;
+}
+
+bool MediapipeInterface::isOpen() const {
+    return isOpened;
+}
+
+void PythonThread::run() {
+    Py_Initialize();
+
+    char cwd[1024];
+    if (getcwd(cwd, sizeof(cwd)) == NULL) {
+        std::cerr << "Error getting current working directory" << std::endl;
+    }
+    // Get the right file
+    PyObject* sys_module = PyImport_ImportModule("sys");
+    PyObject* path = PyObject_GetAttrString(sys_module, "path");
+    PyList_Append(path, PyUnicode_FromString(cwd));
+    PyList_Append(path, PyUnicode_FromString("src/utils"));
+    Py_DECREF(sys_module);
+
+    // Import the "run_tcp" module
+    PyObject* module_name = PyUnicode_FromString("run_tcp");
+    PyObject* module = PyImport_Import(module_name);
+    Py_DECREF(module_name);
+
+    if (module == NULL) {
+        PyErr_Print();
+    }
+
+    // Get a reference to the "run_tcp_sewer" function
+    PyObject* func_name = PyUnicode_FromString("run_tcp_sewer");
+    PyObject* func = PyObject_GetAttr(module, func_name);
+    Py_DECREF(func_name);
+
+    if (!PyCallable_Check(func)) {
+        Py_DECREF(func);
+        Py_DECREF(module);
+        PyErr_Print();
+    }
+
+    // Call the function with no arguments
+    PyObject_CallObject(func, NULL);
+
+    // Clean up
+    Py_DECREF(func);
+    Py_DECREF(module);
+    Py_Finalize();
 }

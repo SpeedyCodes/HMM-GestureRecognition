@@ -3,6 +3,13 @@
 
 #include <QTcpServer>
 #include <QTcpSocket>
+#include <QThread>
+
+class PythonThread : public QThread
+{
+Q_OBJECT
+    void run() override;
+};
 
 class MediapipeInterface : public QObject {
 Q_OBJECT
@@ -22,11 +29,15 @@ private slots:
     void acceptConnection();
     void onDataReady();
 
+public:
+    bool isOpen() const;
+
 private:
     QTcpSocket* imageConnection;
     QTcpSocket* dataConnection;
     QTcpServer imageServer;
     QTcpServer dataServer;
+    PythonThread* pythonClients;
     bool isOpened;
 public:
     static std::vector<std::vector<double>> getLandmarksFromVideo(const char* absoluteVideoPath);

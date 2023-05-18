@@ -259,4 +259,9 @@ HMM* GestureLibrary::createFiveStateHMM(const std::map<Observable, double>& emis
     return fiveStateHMM;
 }
 
+bool GestureLibrary::addGesture(string &gestureID) {
+    gestures.insert({gestureID, Gesture(gestureID, nullptr)});
+    return false;
+}
+
 

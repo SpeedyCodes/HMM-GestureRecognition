@@ -3,6 +3,7 @@
 #include <iostream>
 #include <vector>
 #include <map>
+#include "Gesture.h"
 
 typedef int Observable;
 class Gesture;
@@ -18,6 +19,7 @@ public:
     void setPossibleObservables(std::map <int, std::vector<Observable > > observables);
     HMM* getThresholdHMM() const;
     bool addGesture(Gesture& gesture);
+    bool addGesture(string& gestureID);
     void fromDirectory(std::string& directory);
     void toDirectory(std::string& directory) const;
     bool modelTrainingAndSelection(std::vector<std::vector<Observable>>& observed, std::string gestureID);

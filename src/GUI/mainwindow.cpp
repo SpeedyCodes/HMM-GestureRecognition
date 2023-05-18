@@ -7,7 +7,6 @@
 #include <QLayout>
 #include <thread>
 #include <QObject>
-#include <QThread>
 
 MainWindow::MainWindow(QWidget *parent) :
     QMainWindow(parent),
@@ -35,11 +34,6 @@ MainWindow::MainWindow(QWidget *parent) :
     ui->availableGestureListWidget->addItem("Twee");
     ui->availableGestureListWidget->addItem("Drie");
     ui->availableGestureListWidget->addItem("Vier");
-
-    mediaPipeInterface.open(); // Open tcp thread
-
-    QObject::connect(&mediaPipeInterface, &MediapipeInterface::imageAvailable,
-                this, &MainWindow::paintRealtimeFrame);
 }
 
 MainWindow::~MainWindow()
@@ -49,9 +43,10 @@ MainWindow::~MainWindow()
 
 void MainWindow::on_actionNew_Gesture_triggered()
 {
-    GestureEditor* editor = new GestureEditor(this);
+    GestureEditor* editor = new GestureEditor(this, &library);
     editor->setModal(true);
     editor->exec();
+    delete(editor);
 }
 
 
@@ -81,3 +76,19 @@ void MainWindow::paintRealtimeFrame(QImage& image) {
     ui->label_4->setPixmap(QPixmap::fromImage(image));
 }
 
+
+void MainWindow::on_cameraToggle_clicked()
+{
+    if(!mediaPipeInterface.isOpen()){
+        mediaPipeInterface.open(); // Open tcp thread
+        QObject::connect(&mediaPipeInterface, &MediapipeInterface::imageAvailable,
+                         this, &MainWindow::paintRealtimeFrame);
+    }else{
+        QObject::disconnect(&mediaPipeInterface, &MediapipeInterface::imageAvailable,
+                         this, &MainWindow::paintRealtimeFrame);
+        QImage black;
+        black.fill(Qt::black);
+        paintRealtimeFrame(black);
+        mediaPipeInterface.close();
+    }
+}

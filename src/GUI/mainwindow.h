@@ -6,6 +6,7 @@
 #include "SignLanguageWriter.h"
 #include "RobotConnectionManager.h"
 #include "../utils/MediapipeInterface.h"
+#include "../GestureLibrary.h"
 
 
 namespace Ui {
@@ -30,11 +31,14 @@ private slots:
 
     void on_actionRobot_triggered();
 
+    void on_cameraToggle_clicked();
+
 private:
     Ui::MainWindow *ui;
     SignLanguageWriter* signLanguageWriter;
     RobotConnectionManager* robotConnectionManager;
     MediapipeInterface mediaPipeInterface;
+    GestureLibrary library;
 
 };
 
