@@ -1,6 +1,7 @@
 #include "GestureLibrary.h"
 #include "HMM.h"
 #include "Gesture.h"
+#include "src/utils/MediapipeInterface.h"
 #include "HMMcomponents/hiddenState.h"
 #include <set>
 #include "cmath"
@@ -54,7 +55,24 @@ HMM* GestureLibrary::getThresholdHMM() const{
     HMM* thresholdHMM = new HMM(allHiddenStates, observables);
     return thresholdHMM;
 }
-
+std::string GestureLibrary::realtimeRecognition(const std::vector<double>& frameLandmarks){
+    accumulatedLiveFeedData.push_back(frameLandmarks);
+    if(accumulatedLiveFeedData.size() < 5) return "";  // TODO: remove hardcoded sliding window size or find the best value experimentally
+    // Preprocess data
+    std::vector<Observable > observables = MediapipeInterface::preprocessData(accumulatedLiveFeedData);
+    // Get the highest likelihood and the name of the most probable gesture
+    double gestureLikelihood = 0;
+    std::string probableGesture = recognizeGesture(observables, gestureLikelihood);
+    // Get threshold HMM
+    HMM* thresholdHMM = getThresholdHMM();
+    // Calculate the likelihood of the threshold HMM
+    double threshold = thresholdHMM->likelihood(observables);
+    // Remove the first element of the accumulated live feed
+    accumulatedLiveFeedData.erase(accumulatedLiveFeedData.begin());
+    // Compare the gesture likelihood to threshold
+    if(gestureLikelihood > threshold) return probableGesture;
+    else return "";
+}
 bool
 GestureLibrary::fitAndSelect(std::vector<std::vector<Observable> > GestureData, const std::string &gestureID,
                              double threshold) {

@@ -38,8 +38,11 @@ MainWindow::MainWindow(QWidget *parent) :
 
     mediaPipeInterface.open(); // Open tcp thread
 
+
     QObject::connect(&mediaPipeInterface, &MediapipeInterface::imageAvailable,
                 this, &MainWindow::paintRealtimeFrame);
+    QObject::connect(&mediaPipeInterface, &MediapipeInterface::dataAvailable,
+                     gestureLibrary, &GestureLibrary::realtimeRecognition);
 }
 
 MainWindow::~MainWindow()
