@@ -17,7 +17,7 @@ public:
 
 signals:
     void imageAvailable(QImage& image);
-    void dataAvailable(int data);
+    void dataAvailable(std::vector<double> data);
 private slots:
     void acceptConnection();
     void onDataReady();
@@ -28,6 +28,10 @@ private:
     QTcpServer imageServer;
     QTcpServer dataServer;
     bool isOpened;
+public:
+    static std::vector<std::vector<double>> getLandmarksFromVideo(const char* absoluteVideoPath);
+    static std::vector<int> preprocessData(const std::vector<std::vector<double>>& data); // Data of one video
+    static std::vector<std::vector<int>> preprocessData(const std::vector<std::vector<std::vector<double>>>& data); // Data of multiple videos
 };
 
 

@@ -5,7 +5,7 @@
 #include "GestureEditor.h"
 #include "SignLanguageWriter.h"
 #include "RobotConnectionManager.h"
-#include "../MediapipeInterface/MediapipeInterface.h"
+#include "../utils/MediapipeInterface.h"
 
 
 namespace Ui {
