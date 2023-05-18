@@ -6,6 +6,7 @@
 #include "SignLanguageWriter.h"
 #include "RobotConnectionManager.h"
 #include "../utils/MediapipeInterface.h"
+#include "src/GestureLibrary.h"
 
 
 namespace Ui {
@@ -35,7 +36,7 @@ private:
     SignLanguageWriter* signLanguageWriter;
     RobotConnectionManager* robotConnectionManager;
     MediapipeInterface mediaPipeInterface;
-
+    GestureLibrary* gestureLibrary; // TODO: vector of pointers to GestureLibraries?
 };
 
 #endif // MAINWINDOW_H
