@@ -5,6 +5,9 @@
 #include <QMediaPlayer>
 #include <QVideoWidget>
 #include <QLayout>
+#include <thread>
+#include <QObject>
+#include <QThread>
 
 MainWindow::MainWindow(QWidget *parent) :
     QMainWindow(parent),
@@ -33,7 +36,8 @@ MainWindow::MainWindow(QWidget *parent) :
     ui->availableGestureListWidget->addItem("Drie");
     ui->availableGestureListWidget->addItem("Vier");
 
-    mediaPipeInterface.open();
+    mediaPipeInterface.open(); // Open tcp thread
+
     QObject::connect(&mediaPipeInterface, &MediapipeInterface::imageAvailable,
                 this, &MainWindow::paintRealtimeFrame);
 }
