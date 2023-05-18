@@ -1,4 +1,4 @@
-cmake_minimum_required(VERSION 3.17)
+cmake_minimum_required(VERSION 3.16)
 project(HMM_GestureRecognition)
 
 set(CMAKE_CXX_STANDARD 17)
@@ -9,9 +9,9 @@ find_package(Python REQUIRED COMPONENTS Development)
 include_directories(. lib src/GUI)
 include_directories(${Python_INCLUDE_DIRS})
 # You may specify the path to Python lib manually
-link_libraries(C:/Users/dasha/AppData/Local/Programs/Python/Python310/libs/python310.lib)
+# link_libraries(C:/Users/dasha/AppData/Local/Programs/Python/Python310/libs/python310.lib)
 # Find Qt5 or Qt6
-find_package(Qt5 REQUIRED COMPONENTS Widgets Network Multimedia MultimediaWidgets)
+find_package(Qt6 REQUIRED COMPONENTS Widgets Network Multimedia MultimediaWidgets)
 
 if (QT_VERSION_MAJOR EQUAL 6)
     # Qt6 is found
@@ -36,7 +36,7 @@ add_executable(HMM_GestureRecognition
         src/utils/MediapipeInterface.cpp src/utils/MediapipeInterface.h
         )
 
-target_link_libraries(HMM_GestureRecognition PRIVATE Qt5::Widgets Qt5::Network Qt5::Multimedia Qt5::MultimediaWidgets)
+target_link_libraries(HMM_GestureRecognition PRIVATE Qt6::Widgets Qt6::Network Qt6::Multimedia Qt6::MultimediaWidgets)
 set_target_properties(HMM_GestureRecognition PROPERTIES
         #WIN32_EXECUTABLE ON
         MACOSX_BUNDLE ON
