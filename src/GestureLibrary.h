@@ -27,6 +27,9 @@ public:
     bool
     fitAndSelect(std::vector<std::vector<Observable> > GestureData, const std::string &gestureID, double threshold = 0.0001);
 
+    std::string recognizeFromVideo(const char *AbsolutePath);
+
+    std::pair<std::string, double> recognizeGesture(std::vector<int> &observed);
 private:
     HMM* createThreeStateHMM(const std::map<Observable, double>& emissionMap, const std::vector<Observable>& observables);
 
