@@ -266,6 +266,7 @@ std::string GestureLibrary::recognizeFromVideo(const char* AbsolutePath){
     std::vector<std::vector<double>> landmarks = interface->getLandmarksFromVideo(AbsolutePath);
     std::vector<int> data = interface->preprocessData(landmarks);
     std::pair<std::string, double>gesture = recognizeGesture(data);
+    delete interface;
     return gesture.first;
 }
 
