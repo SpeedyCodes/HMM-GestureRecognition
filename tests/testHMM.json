@@ -1,0 +1,25 @@
+{
+  "hiddenStates": [
+      {
+        "id": 7,
+        "initialProbability": 1.00,
+        "transitions": [
+          {
+            "id": 7,
+            "probability": 1.00
+          }
+        ],
+        "emissions": [
+          {
+            "id": 5,
+            "probability": 0.1
+          },
+          {
+            "id": 10,
+            "probability": 0.9
+          }
+        ]
+      }
+    ],
+  "observables": [5, 10]
+}
