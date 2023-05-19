@@ -27,16 +27,6 @@
      <string>Gestures</string>
     </property>
    </widget>
-   <widget class="QListWidget" name="availableGestureListWidget">
-    <property name="geometry">
-     <rect>
-      <x>30</x>
-      <y>70</y>
-      <width>256</width>
-      <height>161</height>
-     </rect>
-    </property>
-   </widget>
    <widget class="QLabel" name="label_2">
     <property name="geometry">
      <rect>
@@ -156,6 +146,29 @@
       <string>Drie</string>
      </property>
     </item>
+   </widget>
+   <widget class="QListView" name="listView">
+    <property name="geometry">
+     <rect>
+      <x>30</x>
+      <y>80</y>
+      <width>261</width>
+      <height>161</height>
+     </rect>
+    </property>
+   </widget>
+   <widget class="QPushButton" name="saveGesturesButton">
+    <property name="geometry">
+     <rect>
+      <x>169</x>
+      <y>50</y>
+      <width>111</width>
+      <height>24</height>
+     </rect>
+    </property>
+    <property name="text">
+     <string>Save all gestures</string>
+    </property>
    </widget>
   </widget>
   <widget class="QMenuBar" name="menuBar">

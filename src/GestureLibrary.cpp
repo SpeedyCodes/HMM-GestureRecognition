@@ -3,6 +3,8 @@
 #include "Gesture.h"
 #include "HMMcomponents/hiddenState.h"
 #include <set>
+#include <fstream>
+#include <QDir>
 #include "cmath"
 
 bool GestureLibrary::addGesture(Gesture& gesture){
@@ -262,6 +264,75 @@ HMM* GestureLibrary::createFiveStateHMM(const std::map<Observable, double>& emis
 bool GestureLibrary::addGesture(string &gestureID) {
     gestures.insert({gestureID, Gesture(gestureID, nullptr)});
     return false;
+}
+
+GestureLibrary::GestureLibrary(std::string& path){
+    if(path!=""){
+        directory = QFileInfo(QString::fromStdString(path)).dir().absolutePath().toStdString();
+        name = QFileInfo(QString::fromStdString(path)).fileName().toStdString();
+        readIn(path);
+    }
+}
+
+void GestureLibrary::updateSavedGestures() const {
+    assert(directory != "" && name != "");
+    using json = nlohmann::json;
+    string fullPath = QDir(QString::fromStdString(directory)).filePath(QString::fromStdString(name)).toStdString();
+    ifstream f(fullPath);
+    json data;
+    try {
+        data = json::parse(f);
+    } catch (json::exception& exception){
+        cout << exception.what();
+        return;
+    }
+    for(auto gesture : gestures){
+        if(!data["gestures"].contains(gesture.first)){
+            //TODO cleanup: don't use a function that does two things that have so little to do with eachother
+            data["gestures"][gesture.first] = gesture.second.toJson(directory);
+        }
+    }
+    std::ofstream stream;
+    stream.open(fullPath);
+    stream<<std::setw(4)<<data<<std::endl;
+    stream.close();
+}
+
+bool GestureLibrary::initiateFileSystem(const string &path) {
+    using json = nlohmann::json;
+    directory = QFileInfo(QString::fromStdString(path)).dir().absolutePath().toStdString();
+    name = QFileInfo(QString::fromStdString(path)).fileName().toStdString();
+    json data;
+    data["gestures"] = json(json::value_t::object);//empty object to be used as map
+    std::ofstream stream; //TODO helper method for json-to-file
+    stream.open(path);
+    stream<<std::setw(4)<<data<<std::endl;
+    stream.close();
+    return true; //TODO handle invalid directories/filenames
+}
+
+bool GestureLibrary::isFileSystemInitiated() const {
+    return !directory.empty();
+}
+
+void GestureLibrary::readIn(string &path) {
+    using json = nlohmann::json;
+    ifstream f(path);
+    json data;
+    try {
+        data = json::parse(f);
+    } catch (json::exception& exception){
+        cout << exception.what();
+        return;
+    }
+    for (const auto& item : data["gestures"].items())
+    {
+        bool success;
+        const string &relativeJsonPath = item.value()["HMMpath"].get<string>();
+        const string absoluteJsonPath = QDir(QString::fromStdString(directory)).filePath(QString::fromStdString(relativeJsonPath)).toStdString();
+        gestures.insert({item.key(), Gesture(item.key(), new HMM(absoluteJsonPath, success))});
+        if(!success) cerr << "Gesture " << item.key() << "points to an invalid HMM JSON file" << endl;
+    }
 }
 
 

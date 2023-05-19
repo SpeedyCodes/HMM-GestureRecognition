@@ -7,6 +7,8 @@
 #include <QLayout>
 #include <thread>
 #include <QObject>
+#include <QStandardPaths>
+#include <QFileDialog>
 
 MainWindow::MainWindow(QWidget *parent) :
     QMainWindow(parent),
@@ -26,14 +28,9 @@ MainWindow::MainWindow(QWidget *parent) :
     //player->setSource(QUrl("D:/School/UAntwerpen/TA/TOg/HMM-GestureRecognition/cmake-build-debug-mingw/PAL-CLIP PP4.mp4"));
     //player->play();
     //videoWidget->show();
-
+    library = new GestureLibrary();
     signLanguageWriter = nullptr;
     robotConnectionManager = nullptr;
-
-    ui->availableGestureListWidget->addItem("Een");
-    ui->availableGestureListWidget->addItem("Twee");
-    ui->availableGestureListWidget->addItem("Drie");
-    ui->availableGestureListWidget->addItem("Vier");
 }
 
 MainWindow::~MainWindow()
@@ -43,7 +40,7 @@ MainWindow::~MainWindow()
 
 void MainWindow::on_actionNew_Gesture_triggered()
 {
-    GestureEditor* editor = new GestureEditor(this, &library);
+    GestureEditor* editor = new GestureEditor(this, library, &mediaPipeInterface);
     editor->setModal(true);
     editor->exec();
     delete(editor);
@@ -92,3 +89,15 @@ void MainWindow::on_cameraToggle_clicked()
         mediaPipeInterface.close();
     }
 }
+
+void MainWindow::on_saveGesturesButton_clicked()
+{
+    if(!library->isFileSystemInitiated()){
+        QString path = QFileDialog::getSaveFileName(this, tr("Save Gesture Library to file"),
+                                      QStandardPaths::writableLocation(QStandardPaths::MoviesLocation),
+                                      tr("Gesture Libraries (*.gesturelibrary)"));
+        library->initiateFileSystem(path.toStdString());
+    }
+    library->updateSavedGestures();
+}
+

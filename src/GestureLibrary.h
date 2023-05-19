@@ -14,14 +14,19 @@ private:
     std::map<std::string, Gesture> gestures;
     std::map <int, std::vector<Observable > > possibleObservables; // Channel number (from 0), ids of possible observables
     std::vector<Observable > accumulatedLiveFeedData;
+    std::string directory;
+    std::string name;
 public:
-    GestureLibrary(){};
+    explicit GestureLibrary(){};
+    explicit GestureLibrary(std::string& path);
     void setPossibleObservables(std::map <int, std::vector<Observable > > observables);
     HMM* getThresholdHMM() const;
     bool addGesture(Gesture& gesture);
     bool addGesture(string& gestureID);
-    void fromDirectory(std::string& directory);
-    void toDirectory(std::string& directory) const;
+    void readIn(std::string& path);
+    bool initiateFileSystem(const string &path);
+    void updateSavedGestures() const;
+    bool isFileSystemInitiated() const;
     bool modelTrainingAndSelection(std::vector<std::vector<Observable>>& observed, std::string gestureID);
     std::string recognizeGesture(std::vector<Observable>& observed, double& likelihood) const;
     bool isolatedRecognition(std::string& videoPath, std::string& gestureID);

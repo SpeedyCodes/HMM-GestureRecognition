@@ -11,7 +11,7 @@ vector<Observable> observables;
 public:
     HMM(const vector<hiddenState*> &hiddenStates, const vector<Observable> &observables);
 
-    HMM(const string &saveFilePath, bool success);
+    HMM(const string &saveFilePath, bool &success);
 
     virtual ~HMM();
 
@@ -31,7 +31,7 @@ public:
 
     void print();
 
-    void HMMtoJson(std::string file);
+    void HMMtoJson(string &file);
 
 private:
 

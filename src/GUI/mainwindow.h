@@ -33,12 +33,14 @@ private slots:
 
     void on_cameraToggle_clicked();
 
+    void on_saveGesturesButton_clicked();
+
 private:
     Ui::MainWindow *ui;
     SignLanguageWriter* signLanguageWriter;
     RobotConnectionManager* robotConnectionManager;
     MediapipeInterface mediaPipeInterface;
-    GestureLibrary library;
+    GestureLibrary* library;
 
 };
 
