@@ -6,8 +6,8 @@
 #include "SignLanguageWriter.h"
 #include "RobotConnectionManager.h"
 #include "../utils/MediapipeInterface.h"
-#include "src/GestureLibrary.h"
 
+class GestureLibrary;
 
 namespace Ui {
 class MainWindow;

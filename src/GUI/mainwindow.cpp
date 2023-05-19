@@ -8,6 +8,8 @@
 #include <thread>
 #include <QObject>
 #include <QThread>
+#include <src/Gesture.h>
+#include "src/GestureLibrary.h"
 
 MainWindow::MainWindow(QWidget *parent) :
     QMainWindow(parent),
