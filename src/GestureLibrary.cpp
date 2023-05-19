@@ -262,11 +262,9 @@ HMM* GestureLibrary::createFiveStateHMM(const std::map<Observable, double>& emis
 
 
 std::string GestureLibrary::recognizeFromVideo(const char* AbsolutePath){
-    MediapipeInterface* interface = new MediapipeInterface;
-    std::vector<std::vector<double>> landmarks = interface->getLandmarksFromVideo(AbsolutePath);
-    std::vector<int> data = interface->preprocessData(landmarks);
+    std::vector<std::vector<double>> landmarks = MediapipeInterface::getLandmarksFromVideo(AbsolutePath);
+    std::vector<int> data = MediapipeInterface::preprocessData(landmarks);
     std::pair<std::string, double>gesture = recognizeGesture(data);
-    delete interface;
     return gesture.first;
 }
 
