@@ -265,7 +265,8 @@ std::string GestureLibrary::recognizeFromVideo(const char* AbsolutePath){
     MediapipeInterface* interface = new MediapipeInterface;
     std::vector<std::vector<double>> landmarks = interface->getLandmarksFromVideo(AbsolutePath);
     std::vector<int> data = interface->preprocessData(landmarks);
-    return recognizeGesture(data).first;
+    std::pair<std::string, double>gesture = recognizeGesture(data);
+    return gesture.first;
 }
 
 std::pair<std::string, double> GestureLibrary::recognizeGesture(vector<int>& observed){
