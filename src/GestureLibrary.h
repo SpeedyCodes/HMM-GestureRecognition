@@ -22,7 +22,7 @@ public:
     void fromDirectory(std::string& directory);
     void toDirectory(std::string& directory) const;
     bool modelTrainingAndSelection(std::vector<std::vector<Observable>>& observed, std::string gestureID);
-    std::string recognizeGesture(std::vector<Observable>& observed, double& likelihood) const;
+    std::string recognizeGesture(std::vector<Observable>& observed, double& likelihood) const { return "";};
     bool isolatedRecognition(std::string& videoPath, std::string& gestureID);
     std::string realtimeRecognition(const std::vector<double>& frameLandmarks);
     bool
