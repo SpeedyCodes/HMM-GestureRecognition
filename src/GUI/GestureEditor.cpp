@@ -4,10 +4,12 @@
 #include <QStandardPaths>
 #include "src/utils/MediapipeInterface.h"
 
-GestureEditor::GestureEditor(QWidget *parent, GestureLibrary* library) :
-    QDialog(parent), ui(new Ui::GestureEditor), library(library)
+GestureEditor::GestureEditor(QWidget *parent, GestureLibrary* library, MediapipeInterface* mediapipe) :
+    QDialog(parent), ui(new Ui::GestureEditor), library(library), mediapipe(mediapipe)
 {
     ui->setupUi(this);
+    assert(library != nullptr);
+    assert(mediapipe!= nullptr);
 }
 
 GestureEditor::~GestureEditor()
@@ -30,18 +32,24 @@ void GestureEditor::on_selectVideoButton_clicked()
 void GestureEditor::on_trainButton_clicked()
 {
     std::vector<std::vector<std::vector<double>>> data;
-    for(QString path: trainingVideoPaths){
+    int vidCount = trainingVideoPaths.size();
+    ui->statusLabel->setText("Detecting landmarks...\n");
+    for(int i = 0; i < vidCount; i++){
+        QString& path = trainingVideoPaths[i];
         std::string str = path.toStdString();
         const char* p = str.c_str();
-        data.push_back(MediapipeInterface::getLandmarksFromVideo(p));
-        qDebug() << path << " read out";
+        data.push_back(mediapipe->getLandmarksFromVideo(p));
+        ui->progressBar->setValue(95*(float)(i+1)/vidCount); // roughly 95% of time is used by getLandmarks, TODO remove magic number
     }
     ui->statusLabel->setText(ui->statusLabel->text() + "Landmarks detected\n");
+    ui->statusLabel->setText(ui->statusLabel->text() + "Preprocessing data\n");
     std::vector<std::vector<Observable>> observables = MediapipeInterface::preprocessData(data);
     ui->statusLabel->setText(ui->statusLabel->text() + "Preprocessed data\n");
+    ui->statusLabel->setText(ui->statusLabel->text() + "Fitting HMM\n");
     std::string gestureID = ui->nameLineEdit->text().toStdString();
     library->addGesture(gestureID);
     library->fitAndSelect(observables, gestureID);
-    ui->statusLabel->setText(ui->statusLabel->text() + "fitted\n");
+    ui->progressBar->setValue(100);
+    ui->statusLabel->setText(ui->statusLabel->text() + "HMM fitted\n");
 }
 
