@@ -147,16 +147,6 @@
      </property>
     </item>
    </widget>
-   <widget class="QListView" name="listView">
-    <property name="geometry">
-     <rect>
-      <x>30</x>
-      <y>80</y>
-      <width>261</width>
-      <height>161</height>
-     </rect>
-    </property>
-   </widget>
    <widget class="QPushButton" name="saveGesturesButton">
     <property name="geometry">
      <rect>
@@ -168,6 +158,16 @@
     </property>
     <property name="text">
      <string>Save all gestures</string>
+    </property>
+   </widget>
+   <widget class="QListWidget" name="gesturesListWidget">
+    <property name="geometry">
+     <rect>
+      <x>30</x>
+      <y>90</y>
+      <width>251</width>
+      <height>151</height>
+     </rect>
     </property>
    </widget>
   </widget>

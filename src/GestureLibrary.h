@@ -33,6 +33,7 @@ public:
     bool realtimeRecognition(std::string& gestureID);
     bool
     fitAndSelect(std::vector<std::vector<Observable> > GestureData, const std::string &gestureID, double threshold = 0.0001);
+    const std::map<std::string, Gesture>& getGestures() const;
 
 private:
     HMM* createThreeStateHMM(const std::map<Observable, double>& emissionMap, const std::vector<Observable>& observables);

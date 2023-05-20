@@ -44,6 +44,7 @@ void MainWindow::on_actionNew_Gesture_triggered()
     editor->setModal(true);
     editor->exec();
     delete(editor);
+    refreshGesturesView();
 }
 
 
@@ -99,5 +100,13 @@ void MainWindow::on_saveGesturesButton_clicked()
         library->initiateFileSystem(path.toStdString());
     }
     library->updateSavedGestures();
+}
+
+void MainWindow::refreshGesturesView() {
+    ui->gesturesListWidget->clear();
+    const map<string, Gesture>& gestures = library->getGestures();
+    for(auto it = gestures.begin(); it != gestures.end(); it++){
+        ui->gesturesListWidget->addItem(QString::fromStdString(it->first));
+    }
 }
 

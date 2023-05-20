@@ -42,6 +42,8 @@ private:
     MediapipeInterface mediaPipeInterface;
     GestureLibrary* library;
 
+    void refreshGesturesView();
+
 };
 
 #endif // MAINWINDOW_H

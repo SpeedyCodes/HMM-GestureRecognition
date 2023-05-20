@@ -335,4 +335,8 @@ void GestureLibrary::readIn(string &path) {
     }
 }
 
+const std::map<std::string, Gesture> &GestureLibrary::getGestures() const {
+    return gestures;
+}
+
 
