@@ -57,7 +57,7 @@ HMM::HMM(const string &saveFilePath, bool &success){
         this->hiddenStates.push_back(state.second);
     }
     this->observables = observables;
-    success = true;
+    success = checkValues();
 }
 
 bool HMM::checkValues() {

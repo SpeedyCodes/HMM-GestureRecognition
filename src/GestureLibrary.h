@@ -23,7 +23,7 @@ public:
     HMM* getThresholdHMM() const;
     bool addGesture(Gesture& gesture);
     bool addGesture(string& gestureID);
-    void readIn(std::string& path);
+    void readIn(const string &path);
     bool initiateFileSystem(const string &path);
     void updateSavedGestures() const;
     bool isFileSystemInitiated() const;

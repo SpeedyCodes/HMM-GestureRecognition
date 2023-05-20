@@ -91,22 +91,33 @@ void MainWindow::on_cameraToggle_clicked()
     }
 }
 
-void MainWindow::on_saveGesturesButton_clicked()
-{
-    if(!library->isFileSystemInitiated()){
-        QString path = QFileDialog::getSaveFileName(this, tr("Save Gesture Library to file"),
-                                      QStandardPaths::writableLocation(QStandardPaths::MoviesLocation),
-                                      tr("Gesture Libraries (*.gesturelibrary)"));
-        library->initiateFileSystem(path.toStdString());
-    }
-    library->updateSavedGestures();
-}
-
 void MainWindow::refreshGesturesView() {
     ui->gesturesListWidget->clear();
     const map<string, Gesture>& gestures = library->getGestures();
     for(auto it = gestures.begin(); it != gestures.end(); it++){
         ui->gesturesListWidget->addItem(QString::fromStdString(it->first));
     }
+}
+
+
+void MainWindow::on_actionSave_all_Gestures_triggered()
+{
+    if(!library->isFileSystemInitiated()){
+        QString path = QFileDialog::getSaveFileName(this, tr("Save Gesture Library to file"),
+                                      QStandardPaths::writableLocation(QStandardPaths::MoviesLocation),
+                                      tr("Gesture Libraries (*.gesturelibrary)"));
+        if(path == "") return;
+        library->initiateFileSystem(path.toStdString());
+    }
+    library->updateSavedGestures();
+}
+
+void MainWindow::on_actionLoad_Gesture_Library_triggered()
+{
+    QString path = QFileDialog::getOpenFileName(this, tr("Load Gesture Library"),
+                                 QStandardPaths::writableLocation(QStandardPaths::DocumentsLocation),
+                                 tr("Gesture Libraries (*.gesturelibrary)"));
+    library->readIn(path.toStdString());
+    refreshGesturesView();
 }
 

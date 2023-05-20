@@ -33,7 +33,9 @@ private slots:
 
     void on_cameraToggle_clicked();
 
-    void on_saveGesturesButton_clicked();
+    void on_actionSave_all_Gestures_triggered();
+
+    void on_actionLoad_Gesture_Library_triggered();
 
 private:
     Ui::MainWindow *ui;

@@ -268,8 +268,6 @@ bool GestureLibrary::addGesture(string &gestureID) {
 
 GestureLibrary::GestureLibrary(std::string& path){
     if(path!=""){
-        directory = QFileInfo(QString::fromStdString(path)).dir().absolutePath().toStdString();
-        name = QFileInfo(QString::fromStdString(path)).fileName().toStdString();
         readIn(path);
     }
 }
@@ -315,14 +313,16 @@ bool GestureLibrary::isFileSystemInitiated() const {
     return !directory.empty();
 }
 
-void GestureLibrary::readIn(string &path) {
+void GestureLibrary::readIn(const string &path) {
+    directory = QFileInfo(QString::fromStdString(path)).dir().absolutePath().toStdString();
+    name = QFileInfo(QString::fromStdString(path)).fileName().toStdString();
     using json = nlohmann::json;
     ifstream f(path);
     json data;
     try {
         data = json::parse(f);
     } catch (json::exception& exception){
-        cout << exception.what();
+        cerr << exception.what();
         return;
     }
     for (const auto& item : data["gestures"].items())
