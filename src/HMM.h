@@ -33,6 +33,8 @@ public:
 
     void HMMtoJson(string &file);
 
+    const vector<Observable> &getObservables() const;
+
 private:
 
     vector<vector<double>> calculateAlpha(const vector<Observable>& data);

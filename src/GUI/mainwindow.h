@@ -8,6 +8,7 @@
 #include "../utils/MediapipeInterface.h"
 #include "../GestureLibrary.h"
 
+class GestureLibrary;
 
 namespace Ui {
 class MainWindow;
@@ -42,10 +43,9 @@ private:
     SignLanguageWriter* signLanguageWriter;
     RobotConnectionManager* robotConnectionManager;
     MediapipeInterface mediaPipeInterface;
-    GestureLibrary* library;
-
+    GestureLibrary* library; // TODO: vector of pointers to GestureLibraries?
+    
     void refreshGesturesView();
-
 };
 
 #endif // MAINWINDOW_H

@@ -81,9 +81,13 @@ void MainWindow::on_cameraToggle_clicked()
         mediaPipeInterface.open(); // Open tcp thread
         QObject::connect(&mediaPipeInterface, &MediapipeInterface::imageAvailable,
                          this, &MainWindow::paintRealtimeFrame);
+        QObject::connect(&mediaPipeInterface, &MediapipeInterface::dataAvailable,
+                         library, &GestureLibrary::realtimeRecognition);
     }else{
         QObject::disconnect(&mediaPipeInterface, &MediapipeInterface::imageAvailable,
                          this, &MainWindow::paintRealtimeFrame);
+        QObject::disconnect(&mediaPipeInterface, &MediapipeInterface::dataAvailable,
+                     library, &GestureLibrary::realtimeRecognition);
         QImage black;
         black.fill(Qt::black);
         paintRealtimeFrame(black);
