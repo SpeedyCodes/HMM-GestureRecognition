@@ -405,44 +405,44 @@ const vector<hiddenState *> &HMM::getHiddenStates() const {
 }
 
 bool HMM::autoTrain(const vector<vector<Observable> > &dataVector, double threshold) {
-    //save old transition and emission chances
-    vector<map<hiddenState*, double> > transitionVector;
-    vector<map<Observable, double> > emmissionVector;
-    for (auto state:hiddenStates){
-        transitionVector.push_back(state->transitionMap);
-        emmissionVector.push_back(state->emissionMap);
-    }
+    bool keepTraining = true;
+    for (auto data:dataVector) {
+        while (keepTraining) {
+            //save old transition and emission chances
+            vector<map<hiddenState *, double> > transitionVector;
+            vector<map<Observable, double> > emmissionVector;
+            for (auto state: hiddenStates) {
+                transitionVector.push_back(state->transitionMap);
+                emmissionVector.push_back(state->emissionMap);
+            }
 
-    //train the HMM
-    bool success = false;
-    success = train(dataVector,1);
-    if (!success){
-        cerr << "training failed, was there something wrong with the given data?" << endl;
-        return false;
-    }
-
-    // check if any transition or emission chances got changed by more than the given threshold
-    // if so, continue training
-    bool alreadyTrained = false;
-    for (auto i = 0; i != hiddenStates.size(); i++){
-        for (auto state:hiddenStates){
-            if (abs(hiddenStates[i]->transitionMap[state] - transitionVector[i][state]) >= threshold){
-                autoTrain(dataVector, threshold);
-                alreadyTrained = true;
-                break;
+            //train the HMM
+            bool success = false;
+            success = train(data, 1);
+            if (!success) {
+                cerr << "training failed, was there something wrong with the given data?" << endl;
+                return false;
+            }
+            keepTraining = false;
+            // check if any transition or emission chances got changed by more than the given threshold
+            // if so, continue training with the current data
+            // otherwise start training with the next set of data
+            for (auto i = 0; i != hiddenStates.size(); i++) {
+                for (auto state: hiddenStates) {
+                    if (abs(hiddenStates[i]->transitionMap[state] - transitionVector[i][state]) >= threshold) {
+                        keepTraining = true;
+                        break;
+                    }
+                }
+                for (auto observable: observables) {
+                    if (abs(hiddenStates[i]->emissionMap[observable] - emmissionVector[i][observable]) >= threshold) {
+                        keepTraining = true;
+                        break;
+                    }
+                }
             }
         }
-        if (alreadyTrained) break;
-        for (auto observable:observables){
-            if (abs(hiddenStates[i]->emissionMap[observable] - emmissionVector[i][observable]) >= threshold){
-                autoTrain(dataVector, threshold);
-                break;
-                alreadyTrained = true;
-            }
-        }
-        if (alreadyTrained) break;
     }
-    // otherwise stop training
     return true;
 }
 
