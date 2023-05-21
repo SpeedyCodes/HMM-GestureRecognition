@@ -3,6 +3,7 @@
 #include <iostream>
 #include <vector>
 #include <map>
+#include "src/utils/MediapipeInterface.h"
 
 typedef int Observable;
 class Gesture;
@@ -27,7 +28,7 @@ public:
     bool
     fitAndSelect(std::vector<std::vector<Observable> > GestureData, const std::string &gestureID, double threshold = 0.0001);
 
-    std::string recognizeFromVideo(const char *AbsolutePath);
+    std::string recognizeFromVideo(const char *AbsolutePath, MediapipeInterface* interface);
 
     std::pair<std::string, double> recognizeGesture(std::vector<int> &observed);
 private:
