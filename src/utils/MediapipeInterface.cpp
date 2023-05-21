@@ -191,7 +191,7 @@ std::vector<std::vector<int>> MediapipeInterface::preprocessData(const std::vect
     std::vector<std::vector<int>> to_return;
     for(const std::vector<std::vector<double>>& singleVector: data){
         std::vector<int> to_add = preprocessData(singleVector);
-        to_return.push_back(to_add);
+        if(!to_add.empty()) to_return.push_back(to_add);
     }
     return to_return;
 }

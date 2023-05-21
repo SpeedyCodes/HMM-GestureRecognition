@@ -125,3 +125,23 @@ void MainWindow::on_actionLoad_Gesture_Library_triggered()
     refreshGesturesView();
 }
 
+
+void MainWindow::on_videoPickButton_clicked()
+{
+    videoInputPath = QFileDialog::getOpenFileName(this, tr("Select video to recognize gestures in"),
+                                                       QStandardPaths::writableLocation(QStandardPaths::MoviesLocation),
+                                                       tr("Video Files (*.mp4 *.avi *.mov)"));
+    if (videoInputPath != ""){
+        ui->selectedVideoLabel->setText(videoInputPath);
+    }
+}
+
+
+void MainWindow::on_recognizeButton_clicked()
+{
+    std::string str = videoInputPath.toStdString();
+    const char* p = str.c_str();
+    string result = library->recognizeFromVideo(p, &mediaPipeInterface);
+    ui->recognizedListWidget->addItem(QString::fromStdString(result));
+}
+
