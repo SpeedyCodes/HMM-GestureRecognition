@@ -31,7 +31,7 @@ public:
 
     void print();
 
-    void HMMtoJson(std::string file);
+    void HMMtoJson(string &file);
 
     const vector<Observable> &getObservables() const;
 

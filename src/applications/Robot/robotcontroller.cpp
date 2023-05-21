@@ -1,8 +1,15 @@
 #include "robotcontroller.h"
 
-RobotController::RobotController(const QString& ipAddress)
+RobotController::RobotController() : socket(this)
 {
-    socket.connectToHost(QHostAddress(ipAddress), 3000);
+    QObject::connect(&socket, &QTcpSocket::connected,
+                     this, &RobotController::connected);
+    QObject::connect(&socket, &QIODevice::readyRead,
+            this, &RobotController::receiveData);
+}
+
+void RobotController::attemptConnection() {
+    socket.connectToHost(ip, 3000);
 }
 
 void RobotController::forward()
@@ -35,3 +42,17 @@ void RobotController::abort()
     socket.write(QByteArray("abort"));
 }
 
+void RobotController::setIp(const QString &ip) {
+    RobotController::ip = QHostAddress(ip);
+}
+
+void RobotController::testConnection() {
+    socket.write(QByteArray("ping"));
+}
+
+void RobotController::receiveData() {
+    QByteArray data = socket.readAll();
+    if(data.toStdString() == "pong"){
+        emit connectionTestSuccess();
+    }
+}

@@ -7,22 +7,34 @@
  */
 
 #include <QTcpSocket>
+#include "QObject"
 
 using namespace std;
 
-class RobotController
+class RobotController : public QObject
 {
+    Q_OBJECT
+signals:
+    void connected();
+    void connectionTestSuccess();
 public:
-    RobotController(const QString& ipAddress);
+    RobotController();
+    void attemptConnection();
     void forward();
     void backward();
     void left();
     void right();
     void stop();
     void abort();
+    void testConnection();
+
+    void setIp(const QString &ip);
+private slots:
+    void receiveData();
 
 private:
     QTcpSocket socket;
+    QHostAddress ip;
 };
 
 #endif // HMM_GESTURERECOGNITION_ROBOTCONTROLLER_H

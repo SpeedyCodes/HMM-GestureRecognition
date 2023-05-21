@@ -3,6 +3,7 @@
 #include <iostream>
 #include <vector>
 #include <map>
+#include "Gesture.h"
 #include <QObject>
 
 typedef int Observable;
@@ -14,19 +15,26 @@ private:
     std::map<std::string, Gesture> gestures;
     std::map <int, std::vector<Observable > > possibleObservables; // Channel number (from 0), ids of possible observables
     std::vector<std::vector<double> > accumulatedLiveFeedData;
+    std::string directory;
+    std::string name;
 public:
-    GestureLibrary(){};
+    explicit GestureLibrary(){};
+    explicit GestureLibrary(std::string& path);
     void setPossibleObservables(std::map <int, std::vector<Observable > > observables);
     HMM* getThresholdHMM() const;
     bool addGesture(Gesture& gesture);
-    void fromDirectory(std::string& directory);
-    void toDirectory(std::string& directory) const;
+    bool addGesture(string& gestureID);
+    void readIn(const string &path);
+    bool initiateFileSystem(const string &path);
+    void updateSavedGestures() const;
+    bool isFileSystemInitiated() const;
     bool modelTrainingAndSelection(std::vector<std::vector<Observable>>& observed, std::string gestureID);
     std::string recognizeGesture(std::vector<Observable>& observed, double& likelihood) const { return "";};
     bool isolatedRecognition(std::string& videoPath, std::string& gestureID);
     std::string realtimeRecognition(const std::vector<double>& frameLandmarks);
     bool
     fitAndSelect(std::vector<std::vector<Observable> > GestureData, const std::string &gestureID, double threshold = 0.0001);
+    const std::map<std::string, Gesture>& getGestures() const;
 
 private:
     HMM* createThreeStateHMM(const std::map<Observable, double>& emissionMap, const std::vector<Observable>& observables);

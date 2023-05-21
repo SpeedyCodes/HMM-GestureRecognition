@@ -33,7 +33,7 @@ add_executable(HMM_GestureRecognition
         src/GUI/GestureEditor.h src/GUI/GestureEditor.ui src/GUI/GestureEditor.cpp
         src/GUI/SignLanguageWriter.h src/GUI/SignLanguageWriter.ui src/GUI/SignLanguageWriter.cpp
         src/GUI/RobotConnectionManager.h src/GUI/RobotConnectionManager.cpp src/GUI/RobotConnectionManager.ui
-        src/utils/MediapipeInterface.cpp src/utils/MediapipeInterface.h
+        src/utils/MediapipeInterface.cpp src/utils/MediapipeInterface.h src/applications/Robot/robotcontroller.cpp
         )
 add_executable(Tests tests/tests.cpp src/HMM.cpp src/HMM.h src/HMMcomponents/hiddenState.h
         src/HMMcomponents/hiddenState.cpp src/Gesture.cpp src/Gesture.h)

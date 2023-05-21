@@ -37,6 +37,12 @@ public:
     HMM *getHiddenMarkovModel() const;
 
     void setHiddenMarkovModel(HMM *hiddenMarkovModel);
+/**
+ * writes out a JSON of the associated HMM and returns a JSON object to be incorporated into the GestureLibrary JSON file.
+ * @param directory the directory to put the HMM JSON in
+ * @return a JSON object with relevant gesture data
+ */
+    nlohmann::json toJson(const string& directory);
 
 private:
     string id;
