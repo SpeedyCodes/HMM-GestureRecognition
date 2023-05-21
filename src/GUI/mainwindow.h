@@ -6,7 +6,9 @@
 #include "SignLanguageWriter.h"
 #include "RobotConnectionManager.h"
 #include "../utils/MediapipeInterface.h"
+#include "../GestureLibrary.h"
 
+class GestureLibrary;
 
 namespace Ui {
 class MainWindow;
@@ -30,12 +32,20 @@ private slots:
 
     void on_actionRobot_triggered();
 
+    void on_cameraToggle_clicked();
+
+    void on_actionSave_all_Gestures_triggered();
+
+    void on_actionLoad_Gesture_Library_triggered();
+
 private:
     Ui::MainWindow *ui;
     SignLanguageWriter* signLanguageWriter;
     RobotConnectionManager* robotConnectionManager;
     MediapipeInterface mediaPipeInterface;
-
+    GestureLibrary* library; // TODO: vector of pointers to GestureLibraries?
+    
+    void refreshGesturesView();
 };
 
 #endif // MAINWINDOW_H

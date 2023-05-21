@@ -14,7 +14,7 @@ HMM::~HMM() {
     }
 }
 
-HMM::HMM(const string &saveFilePath, bool success){
+HMM::HMM(const string &saveFilePath, bool &success){
     //parse json
     using json = nlohmann::json;
     ifstream f(saveFilePath);
@@ -57,15 +57,36 @@ HMM::HMM(const string &saveFilePath, bool success){
         this->hiddenStates.push_back(state.second);
     }
     this->observables = observables;
-    success = true;
+    success = checkValues();
 }
 
 bool HMM::checkValues() {
+    bool success = true;
+    double sumInitialChances = 0;
+    for(auto state:hiddenStates){
+        map<Observable, double> emissionMap = state->emissionMap;
+        for (int observable:observables){
+            if (emissionMap.find(observable) == emissionMap.end()){
+                cerr << "a certain state doesn't have an emission probability for observable " << observable << endl;
+                success = false;
+                break;
+            }
+        }
+        if (!success) break;
+    }
     for(auto state:hiddenStates){
         if (!state->isValid()){
-            cerr << " probabilities do not add up to 1 for a certain state" << endl;
-            return false;
+            cerr << "probabilities do not add up to 1 for a certain state" << endl;
+            success = false;
+            break;
         }
+    }
+    for(auto state:hiddenStates){
+        sumInitialChances += state->initialChance;
+    }
+    if (abs(sumInitialChances - 1) >= 1e-12){
+        cerr << "initial probabilities do not add up to 1 for the HMM" << endl;
+        success = false;
     }
     return true;
 }
@@ -241,13 +262,9 @@ bool HMM::train(const vector<vector<Observable>> &dataVector, int iterations) {
     return true;
 }
 
-void HMM::HMMtoJson(std::string file){
+void HMM::HMMtoJson(string &file){
     nlohmann::json j;
     nlohmann::json j1;
-    std::vector<std::string>observables;
-    for(int i = 0; i<this->observables.size(); i++){
-        observables.push_back(to_string(this->observables[i]));
-    }
     std::vector<nlohmann::json>hiddenStates;
     for(int i = 0; i<this->hiddenStates.size(); i++){
         nlohmann::json j2;
@@ -268,7 +285,7 @@ void HMM::HMMtoJson(std::string file){
         for(it2 = this->hiddenStates[i]->emissionMap.begin(); it2 != this->hiddenStates[i]->emissionMap.end(); it2++){
             nlohmann::json j4;
             j4["id"] = it2->first;
-            j4["probability"] = it->second;
+            j4["probability"] = it2->second;
             emissions.push_back(j4);
         }
         j2["emissions"] = emissions;
@@ -427,4 +444,8 @@ bool HMM::autoTrain(const vector<vector<Observable> > &dataVector, double thresh
     }
     // otherwise stop training
     return true;
+}
+
+const vector<Observable> &HMM::getObservables() const {
+    return observables;
 }

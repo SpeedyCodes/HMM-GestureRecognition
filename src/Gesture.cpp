@@ -73,3 +73,12 @@ Gesture::Gesture(const string &saveFilePath, bool &success) {
 void Gesture::setHiddenMarkovModel(HMM *hiddenMarkovModel) {
     Gesture::hiddenMarkovModel = hiddenMarkovModel;
 }
+
+nlohmann::json Gesture::toJson(const string &directory) {
+    using json = nlohmann::json;
+    json output;
+    string path = directory + "/" + id + ".json";
+    hiddenMarkovModel->HMMtoJson(path);
+    output["HMMpath"] = id + ".json";
+    return output;
+}
