@@ -7,6 +7,7 @@
 #include <fstream>
 #include <QDir>
 #include "cmath"
+#include "src/utils/MediapipeInterface.h"
 
 bool GestureLibrary::addGesture(Gesture& gesture){
     gestures.insert(std::make_pair(gesture.getId(), gesture));
@@ -358,3 +359,29 @@ const std::map<std::string, Gesture> &GestureLibrary::getGestures() const {
 }
 
 
+std::string GestureLibrary::recognizeFromVideo(const char* AbsolutePath, MediapipeInterface* interface){
+    std::vector<std::vector<double>> landmarks = interface->getLandmarksFromVideo(AbsolutePath);
+    std::vector<int> data = MediapipeInterface::preprocessData(landmarks);
+    std::pair<std::string, double>gesture = recognizeGesture(data);
+    return gesture.first;
+}
+
+std::pair<std::string, double> GestureLibrary::recognizeGesture(vector<int>& observed){
+    std::map<std::string, double>likelyhoodHMM;
+    std::map<std::string, Gesture>::iterator it;
+    for (it = gestures.begin(); it != gestures.end(); it++){
+        double likely = it->second.getHiddenMarkovModel()->likelihood(observed);
+        likelyhoodHMM[it->first] = likely;
+    }
+    std::pair<std::string, double>gesture;
+    gesture.first = likelyhoodHMM.begin()->first;
+    gesture.second = likelyhoodHMM.begin()->second;
+    std::map<std::string, double>::iterator it2;
+    for(it2 = likelyhoodHMM.begin(); it2!=likelyhoodHMM.end(); it++){
+        if(it2->second > gesture.second){
+            gesture.first = it2->first;
+            gesture.second = it2->second;
+        }
+    }
+    return gesture;
+}

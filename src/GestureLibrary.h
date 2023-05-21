@@ -3,8 +3,10 @@
 #include <iostream>
 #include <vector>
 #include <map>
+#include "src/utils/MediapipeInterface.h"
 #include "Gesture.h"
 #include <QObject>
+
 
 typedef int Observable;
 class Gesture;
@@ -36,6 +38,9 @@ public:
     fitAndSelect(std::vector<std::vector<Observable> > GestureData, const std::string &gestureID, double threshold = 0.0001);
     const std::map<std::string, Gesture>& getGestures() const;
 
+    std::string recognizeFromVideo(const char *AbsolutePath, MediapipeInterface* interface);
+
+    std::pair<std::string, double> recognizeGesture(std::vector<int> &observed);
 private:
     HMM* createThreeStateHMM(const std::map<Observable, double>& emissionMap, const std::vector<Observable>& observables);
 
