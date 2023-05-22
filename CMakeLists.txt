@@ -9,9 +9,9 @@ find_package(Python REQUIRED COMPONENTS Development)
 include_directories(. lib src/GUI)
 include_directories(${Python_INCLUDE_DIRS})
 # You may specify the path to Python lib manually
-# link_libraries(C:/Users/dasha/AppData/Local/Programs/Python/Python310/libs/python310.lib)
+link_libraries(C:/Users/dasha/AppData/Local/Programs/Python/Python310/libs/python310.lib)
 # Find Qt5 or Qt6
-find_package(Qt6 REQUIRED COMPONENTS Widgets Network Multimedia MultimediaWidgets)
+find_package(Qt5 REQUIRED COMPONENTS Widgets Network Multimedia MultimediaWidgets)
 
 if (QT_VERSION_MAJOR EQUAL 6)
     # Qt6 is found
@@ -38,7 +38,14 @@ add_executable(HMM_GestureRecognition
 add_executable(Tests tests/tests.cpp src/HMM.cpp src/HMM.h src/HMMcomponents/hiddenState.h
         src/HMMcomponents/hiddenState.cpp src/Gesture.cpp src/Gesture.h)
 
-target_link_libraries(HMM_GestureRecognition PRIVATE Qt6::Widgets Qt6::Network Qt6::Multimedia Qt6::MultimediaWidgets)
+add_executable(Performance tests/evaluatePerformance.cpp src/utils/MediapipeInterface.cpp src/utils/MediapipeInterface.h
+        src/HMM.cpp
+        src/HMM.h src/HMMcomponents/hiddenState.h src/HMMcomponents/hiddenState.cpp
+        src/Gesture.cpp src/Gesture.h src/GestureLibrary.cpp src/GestureLibrary.h)
+
+set(Qt_Libs Qt5::Widgets Qt5::Network Qt5::Multimedia Qt5::MultimediaWidgets)
+target_link_libraries(HMM_GestureRecognition PRIVATE ${Qt_Libs})
+target_link_libraries(Performance PRIVATE ${Qt_Libs})
 set_target_properties(HMM_GestureRecognition PROPERTIES
         #WIN32_EXECUTABLE ON
         MACOSX_BUNDLE ON
