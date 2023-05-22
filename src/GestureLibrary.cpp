@@ -1,7 +1,6 @@
 #include "GestureLibrary.h"
 #include "HMM.h"
 #include "Gesture.h"
-#include "src/utils/MediapipeInterface.h"
 #include "HMMcomponents/hiddenState.h"
 #include <set>
 #include <fstream>
@@ -331,7 +330,7 @@ std::pair<std::string, double> GestureLibrary::recognizeGesture(vector<int>& obs
     gesture.first = likelyhoodHMM.begin()->first;
     gesture.second = likelyhoodHMM.begin()->second;
     std::map<std::string, double>::iterator it2;
-    for(it2 = likelyhoodHMM.begin(); it2!=likelyhoodHMM.end(); it++){
+    for(it2 = likelyhoodHMM.begin(); it2!=likelyhoodHMM.end(); it2++){
         if(it2->second > gesture.second){
             gesture.first = it2->first;
             gesture.second = it2->second;
