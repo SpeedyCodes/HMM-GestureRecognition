@@ -6,6 +6,8 @@
 #include "src/utils/MediapipeInterface.h"
 #include "Gesture.h"
 #include <QObject>
+#include "cmath"
+#include "HMMcomponents/logProbability.h"
 
 
 typedef int Observable;
@@ -31,7 +33,7 @@ public:
     void updateSavedGestures() const;
     bool isFileSystemInitiated() const;
     bool modelTrainingAndSelection(std::vector<std::vector<Observable>>& observed, std::string gestureID);
-    std::string recognizeGesture(std::vector<Observable>& observed, double& likelihood) const { return "";};
+    std::string recognizeGesture(std::vector<Observable>& observed, logProbability &likelihood) const { return "";};
     bool isolatedRecognition(std::string& videoPath, std::string& gestureID);
     std::string realtimeRecognition(const std::vector<double>& frameLandmarks);
     bool
@@ -41,9 +43,9 @@ public:
 
     std::string recognizeFromVideo(const char *AbsolutePath, MediapipeInterface* interface);
 
-    std::pair<std::string, double> recognizeGesture(std::vector<int> &observed);
+    std::pair<std::string, logProbability> recognizeGesture(std::vector<int> &observed);
 private:
-    HMM* createHMM(const std::map<Observable, double>& emissionMap, const std::vector<Observable>& observables, int states);
+    HMM* createHMM(const map<Observable, logProbability> &emissionMap, const std::vector<Observable>& observables, int states);
 };
 
 

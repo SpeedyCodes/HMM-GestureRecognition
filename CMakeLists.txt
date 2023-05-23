@@ -33,10 +33,10 @@ add_executable(HMM_GestureRecognition
         src/GUI/GestureEditor.h src/GUI/GestureEditor.ui src/GUI/GestureEditor.cpp
         src/GUI/SignLanguageWriter.h src/GUI/SignLanguageWriter.ui src/GUI/SignLanguageWriter.cpp
         src/GUI/RobotConnectionManager.h src/GUI/RobotConnectionManager.cpp src/GUI/RobotConnectionManager.ui
-        src/utils/MediapipeInterface.cpp src/utils/MediapipeInterface.h src/applications/Robot/robotcontroller.cpp
-        )
+        src/utils/MediapipeInterface.cpp src/utils/MediapipeInterface.h src/applications/Robot/robotcontroller.cpp src/HMMcomponents/logProbability.cpp src/HMMcomponents/logProbability.h)
+
 add_executable(Tests tests/tests.cpp src/HMM.cpp src/HMM.h src/HMMcomponents/hiddenState.h
-        src/HMMcomponents/hiddenState.cpp src/Gesture.cpp src/Gesture.h)
+        src/HMMcomponents/hiddenState.cpp src/Gesture.cpp src/Gesture.h src/HMMcomponents/logProbability.cpp src/HMMcomponents/logProbability.h)
 
 target_link_libraries(HMM_GestureRecognition PRIVATE Qt6::Widgets Qt6::Network Qt6::Multimedia Qt6::MultimediaWidgets)
 set_target_properties(HMM_GestureRecognition PROPERTIES

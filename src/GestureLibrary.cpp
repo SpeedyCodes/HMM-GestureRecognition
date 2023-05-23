@@ -6,7 +6,6 @@
 #include <fstream>
 #include <QDir>
 #include "cmath"
-#include "src/utils/MediapipeInterface.h"
 
 bool GestureLibrary::addGesture(Gesture& gesture){
     gestures.insert(std::make_pair(gesture.getId(), gesture));
@@ -27,11 +26,14 @@ HMM* GestureLibrary::getThresholdHMM() const{
         int numberOfStates = gestureStates.size();
         // Traverse all states of the gesture
         for(hiddenState* &state: gestureStates){
-            state->initialChance = 0; // Set initial chance to zero
+            state->initialChance = logProbability::fromRegularProbability(0); // Set initial chance to zero
             // Change outgoing transition probabilities
-            for(std::pair<hiddenState*, double> transitionPair: state->transitionMap){
-                if(transitionPair.first == state || transitionPair.second == 0) continue; // Skip self-loops and zero-transitions
-                transitionPair.second = (1 - transitionPair.second)/(numberOfStates - 1);
+            for(std::pair<hiddenState*, logProbability> transitionPair: state->transitionMap){
+                // Skip self-loops and zero-transitions
+                if(transitionPair.first == state || isinf(transitionPair.second.getValueAsIs())){ // ln(0)=-inf
+                    continue;
+                }
+                transitionPair.second = (logProbability::fromRegularProbability(1) - transitionPair.second)/(numberOfStates - 1);
             }
             allHiddenStates.push_back(state); // Push to allHiddenStates
         }
@@ -42,16 +44,16 @@ HMM* GestureLibrary::getThresholdHMM() const{
     //  (or if only one channel, remove map from possibleObservables)
     std::vector<Observable > observables = possibleObservables.at(1);
     // Create observation map with all zero emission probs
-    map<Observable, double> zeroEmissionMap;
-    for(Observable observable: observables) zeroEmissionMap[observable] = 0;
+    map<Observable, logProbability> zeroEmissionMap;
+    for(Observable observable: observables) zeroEmissionMap[observable] = logProbability::fromRegularProbability(0);
     // Create transition map for start state of threshold HMM to all ex-gesture states
-    map<hiddenState*, double> startStateTransitionMap;
+    map<hiddenState*, logProbability> startStateTransitionMap;
     for(hiddenState* state: allHiddenStates){
-        startStateTransitionMap[state] = 1;
+        startStateTransitionMap[state] = logProbability::fromRegularProbability(1);
     }
-    hiddenState* startState = new hiddenState(1, startStateTransitionMap, zeroEmissionMap, 1); // Create start state of threshold HMM
-    map<hiddenState*, double> endStateTransitionMap = {{startState, 1}}; // Create transition map from end state to begin
-    hiddenState* endState = new hiddenState(0, endStateTransitionMap, zeroEmissionMap, 0); // Create end state
+    hiddenState* startState = new hiddenState(1, startStateTransitionMap, zeroEmissionMap, logProbability::fromRegularProbability(1)); // Create start state of threshold HMM
+    map<hiddenState*, logProbability> endStateTransitionMap = {{startState, logProbability::fromRegularProbability(1)}}; // Create transition map from end state to begin
+    hiddenState* endState = new hiddenState(0, endStateTransitionMap, zeroEmissionMap, logProbability::fromRegularProbability(0)); // Create end state
     allHiddenStates.push_back(startState);
     allHiddenStates.push_back(endState);
     HMM* thresholdHMM = new HMM(allHiddenStates, observables);
@@ -63,12 +65,12 @@ std::string GestureLibrary::realtimeRecognition(const std::vector<double>& frame
     // Preprocess data
     std::vector<Observable > observables = MediapipeInterface::preprocessData(accumulatedLiveFeedData);
     // Get the highest likelihood and the name of the most probable gesture
-    double gestureLikelihood = 0;
+    logProbability gestureLikelihood = logProbability::fromRegularProbability(0);
     std::string probableGesture = recognizeGesture(observables, gestureLikelihood);
     // Get threshold HMM
     HMM* thresholdHMM = getThresholdHMM();
     // Calculate the likelihood of the threshold HMM
-    double threshold = thresholdHMM->likelihood(observables);
+    logProbability threshold = thresholdHMM->likelihood(observables);
     // Remove the first element of the accumulated live feed
     accumulatedLiveFeedData.erase(accumulatedLiveFeedData.begin());
     // Compare the gesture likelihood to threshold
@@ -122,7 +124,7 @@ GestureLibrary::fitAndSelect(std::vector<std::vector<Observable> > GestureData, 
 
     //calculate the emission probabilities and put them in a map
     //emissionProbability = amount of times the angle appears in the given data / total amount of angles
-    map<Observable, double> emissionMap;
+    map<Observable, logProbability> emissionMap;
     for (int observable: observables) {
         double count = 0;
         for (auto &dataSet: GestureData) {
@@ -130,13 +132,13 @@ GestureLibrary::fitAndSelect(std::vector<std::vector<Observable> > GestureData, 
                 if (observable == angle) count += 1;
             }
         }
-        emissionMap[observable] = count / totalAmntOfAngles;
+        emissionMap[observable] = logProbability::fromRegularProbability(count / totalAmntOfAngles);
     }
 
     //calculate which HMM would have the highest success rate
-    vector<double> successRates;
+    vector<logProbability> successRates;
     for (int i = 2; i != stateAmount; i++){
-        successRates.push_back(0);
+        successRates.push_back(logProbability::fromRegularProbability(0));
     }
     for (int i = 1; i != 4; i++){
         //create test HMMs with their respective amount of hidden states
@@ -175,7 +177,7 @@ GestureLibrary::fitAndSelect(std::vector<std::vector<Observable> > GestureData, 
             delete hmm;
         }
     }
-    double highestSuccessRate = 0;
+    logProbability highestSuccessRate = logProbability::fromRegularProbability(0);
     int stateAmountHighestSuccess = 0;
     for (int i = 0; i != stateAmount - 2; i++){
         if (successRates[i] > highestSuccessRate){
@@ -189,19 +191,19 @@ GestureLibrary::fitAndSelect(std::vector<std::vector<Observable> > GestureData, 
     HMM* newHMM = createHMM(emissionMap,observables,stateAmountHighestSuccess);
     newHMM->autoTrain(GestureData, threshold);
     cout << "state amount: " << stateAmountHighestSuccess << endl;  //TODO deze feedback er uit halen?
-    cout << "success rate: " << newHMM->likelihood(GestureData) << endl;
+    cout << "success rate: " << newHMM->likelihood(GestureData).toRegularProbability() << endl;
     gestures.at(gestureID).setHiddenMarkovModel(newHMM);
 
     return true;
 }
 
-HMM *GestureLibrary::createHMM(const map<Observable, double> &emissionMap, const vector<Observable> &observables, int states) {
+HMM *GestureLibrary::createHMM(const map<Observable, logProbability> &emissionMap, const vector<Observable> &observables, int states) {
     //create hidden states
     //initial probability of the first/"left most state" is 1, the rest is 0
     vector<hiddenState *> hiddenStates;
-    hiddenStates.push_back(new hiddenState(0,1));
+    hiddenStates.push_back(new hiddenState(0,logProbability::fromRegularProbability(1)));
     for (int i = 1; i != states; i++){
-        hiddenStates.push_back(new hiddenState(i,0));
+        hiddenStates.push_back(new hiddenState(i,logProbability::fromRegularProbability(0)));
     }
 
     //assign transitionMap to all hidden states
@@ -210,20 +212,20 @@ HMM *GestureLibrary::createHMM(const map<Observable, double> &emissionMap, const
     for (int i = 0; i != states-1; i++){
         for (auto& state:hiddenStates){
             if (hiddenStates[i] == state){
-                hiddenStates[i]->transitionMap[state] = 0.8;
+                hiddenStates[i]->transitionMap[state] = logProbability::fromRegularProbability(0.8);
             }
             else if (hiddenStates[i+1] == state){
-                hiddenStates[i]->transitionMap[state] = 0.2;
+                hiddenStates[i]->transitionMap[state] = logProbability::fromRegularProbability(0.2);
             }
             else {
-                hiddenStates[i]->transitionMap[state] = 0;
+                hiddenStates[i]->transitionMap[state] = logProbability::fromRegularProbability(0);
             }
         }
     }
     for (int i = 0; i != states-1; i++){
-        hiddenStates[states-1]->transitionMap[hiddenStates[i]] = 0;
+        hiddenStates[states-1]->transitionMap[hiddenStates[i]] = logProbability::fromRegularProbability(0);
     }
-    hiddenStates[states-1]->transitionMap[hiddenStates[states-1]] = 1;
+    hiddenStates[states-1]->transitionMap[hiddenStates[states-1]] = logProbability::fromRegularProbability(1);
 
     //assign emissionMaps to all hidden states
     for (auto hiddenState: hiddenStates) { hiddenState->emissionMap = emissionMap; }
@@ -315,21 +317,21 @@ const std::map<std::string, Gesture> &GestureLibrary::getGestures() const {
 std::string GestureLibrary::recognizeFromVideo(const char* AbsolutePath, MediapipeInterface* interface){
     std::vector<std::vector<double>> landmarks = interface->getLandmarksFromVideo(AbsolutePath);
     std::vector<int> data = MediapipeInterface::preprocessData(landmarks);
-    std::pair<std::string, double>gesture = recognizeGesture(data);
+    std::pair<std::string, logProbability>gesture = recognizeGesture(data);
     return gesture.first;
 }
 
-std::pair<std::string, double> GestureLibrary::recognizeGesture(vector<int>& observed){
-    std::map<std::string, double>likelyhoodHMM;
+std::pair<std::string, logProbability> GestureLibrary::recognizeGesture(vector<int>& observed){
+    std::map<std::string, logProbability>likelyhoodHMM;
     std::map<std::string, Gesture>::iterator it;
     for (it = gestures.begin(); it != gestures.end(); it++){
-        double likely = it->second.getHiddenMarkovModel()->likelihood(observed);
+        logProbability likely = it->second.getHiddenMarkovModel()->likelihood(observed);
         likelyhoodHMM[it->first] = likely;
     }
-    std::pair<std::string, double>gesture;
+    std::pair<std::string, logProbability>gesture;
     gesture.first = likelyhoodHMM.begin()->first;
     gesture.second = likelyhoodHMM.begin()->second;
-    std::map<std::string, double>::iterator it2;
+    std::map<std::string, logProbability>::iterator it2;
     for(it2 = likelyhoodHMM.begin(); it2!=likelyhoodHMM.end(); it2++){
         if(it2->second > gesture.second){
             gesture.first = it2->first;

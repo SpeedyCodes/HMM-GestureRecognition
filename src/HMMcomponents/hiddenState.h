@@ -2,6 +2,7 @@
 #define HMM_GESTURERECOGNITION_HIDDENSTATE_H
 
 #include <map>
+#include "logProbability.h"
 
 using namespace std;
 
@@ -10,16 +11,16 @@ typedef int Observable;
 class hiddenState {
 public:
     int id;
-    map<hiddenState*,double> transitionMap;
-    map<Observable,double > emissionMap;
-    double initialChance;
+    map<hiddenState*,logProbability> transitionMap;
+    map<Observable,logProbability> emissionMap;
+    logProbability initialChance;
 
     hiddenState();
 
-    hiddenState(int id, double initialChance) : id(id), initialChance(initialChance) {}
+    hiddenState(int id, logProbability initialChance) : id(id), initialChance(initialChance) {}
 
-    hiddenState(int id, const map<hiddenState*, double> &transitionMap, const map<Observable, double> &emissionMap,
-                double initialChance);
+    hiddenState(int id, const map<hiddenState *, logProbability> &transitionMap, const map<Observable, logProbability> &emissionMap,
+                logProbability initialChance);
 
 
     /**

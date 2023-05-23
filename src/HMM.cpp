@@ -43,14 +43,14 @@ HMM::HMM(const string &saveFilePath, bool &success){
     for(auto& hiddenStateData : data["hiddenStates"]){
         int id = hiddenStateData["id"].get<int>();
         hiddenState *hiddenstate = hiddenStates[id];
-        hiddenstate->initialChance = hiddenStateData["initialProbability"].get<double>();
+        hiddenstate->initialChance = logProbability(hiddenStateData["initialProbability"].get<double>());
         for (auto& transitionData: hiddenStateData["transitions"]) {
             hiddenstate->transitionMap.insert({hiddenStates.at(transitionData["id"].get<int>()),
-                                               transitionData["probability"].get<double>()});
+                                               logProbability(transitionData["probability"].get<double>())});
         }
         for (auto& emissionData: hiddenStateData["emissions"]) {
             hiddenstate->emissionMap.insert({emissionData["id"].get<int>(),
-                                             emissionData["probability"].get<double>()});
+                                             logProbability(emissionData["probability"].get<double>())});
         }
     }
     for(auto& state: hiddenStates) {
@@ -62,9 +62,9 @@ HMM::HMM(const string &saveFilePath, bool &success){
 
 bool HMM::checkValues() {
     bool success = true;
-    double sumInitialChances = 0;
+    logProbability sumInitialChances = logProbability::fromRegularProbability(0);
     for(auto state:hiddenStates){
-        map<Observable, double> emissionMap = state->emissionMap;
+        map<Observable, logProbability> emissionMap = state->emissionMap;
         for (int observable:observables){
             if (emissionMap.find(observable) == emissionMap.end()){
                 cerr << "a certain state doesn't have an emission probability for observable " << observable << endl;
@@ -84,21 +84,21 @@ bool HMM::checkValues() {
     for(auto state:hiddenStates){
         sumInitialChances += state->initialChance;
     }
-    if (abs(sumInitialChances - 1) >= 1e-12){
+    if (abs(sumInitialChances.toRegularProbability() - 1) >= 1e-12){
         cerr << "initial probabilities do not add up to 1 for the HMM" << endl;
         success = false;
     }
     return true;
 }
 
-double HMM::likelihood(std::vector<Observable>& observations){
+logProbability HMM::likelihood(std::vector<Observable>& observations){
 
-    std::vector<std::pair<hiddenState*, double>>previousAlpha;
+    std::vector<std::pair<hiddenState*, logProbability>>previousAlpha;
     for(int i = 0; i<observations.size(); i++){
-        std::vector<std::pair<hiddenState*, double>>alpha;
-        std::pair<hiddenState*, double>elem;
+        std::vector<std::pair<hiddenState*, logProbability>>alpha;
+        std::pair<hiddenState*, logProbability>elem;
         for(int j = 0; j<this->hiddenStates.size(); j++){
-            double getal = 0;
+            logProbability getal = logProbability::fromRegularProbability(0);
             if(i == 0){
                 getal = this->hiddenStates[j]->initialChance*this->hiddenStates[j]->emissionMap[observations[i]];
                 elem.first = this->hiddenStates[j];
@@ -118,15 +118,15 @@ double HMM::likelihood(std::vector<Observable>& observations){
         previousAlpha = alpha;
         alpha.clear();
     }
-    double totalChance = 0;
+    logProbability totalChance = logProbability::fromRegularProbability(0);
     for(auto chance: previousAlpha){
         totalChance += chance.second;
     }
     return totalChance;
 }
 
-double HMM::likelihood(std::vector<std::vector<Observable>> observations) {
-    double totalChance = 0;
+logProbability HMM::likelihood(std::vector<std::vector<Observable>> observations) {
+    logProbability totalChance = logProbability::fromRegularProbability(0);
     for (auto& observationVector:observations){
         totalChance += likelihood(observationVector);
     }
@@ -150,16 +150,16 @@ bool HMM::train(const vector<Observable> &data, int iterations) {
     int T = data.size();
 
     for (int iteration = 0; iteration != iterations; iteration++){
-        vector<vector<double>> alpha = calculateAlpha(data);
-        vector<vector<double>> beta = calculateBeta(data);
+        vector<vector<logProbability>> alpha = calculateAlpha(data);
+        vector<vector<logProbability>> beta = calculateBeta(data);
 
-        vector<vector<vector<double>>> xi;
+        vector<vector<vector<logProbability>>> xi;
         for (int i = 0; i != M;i++){
-            vector<vector<double>> tempVector1;
+            vector<vector<logProbability>> tempVector1;
             for (int j = 0; j != M; j++){
-                vector<double> tempVector2;
+                vector<logProbability> tempVector2;
                 for (int k = 0; k != T-1;k++){
-                    tempVector2.push_back(0);
+                    tempVector2.push_back(logProbability::fromRegularProbability(0));
                 }
                 tempVector1.push_back(tempVector2);
             }
@@ -167,19 +167,19 @@ bool HMM::train(const vector<Observable> &data, int iterations) {
         }
 
         for (int t = 0; t!= T-1; t++){
-            double denominator = calculateDenominator(data,alpha,beta,t);
+            logProbability denominator = calculateDenominator(data,alpha,beta,t);
             for (int i = 0; i != M; i++){
                 for (int j = 0; j != M; j++){
-                    double numerator = alpha[t][i] * hiddenStates[i]->transitionMap[hiddenStates[j]] * hiddenStates[j]->emissionMap[data[t+1]] * beta[t+1][j];
+                    logProbability numerator = alpha[t][i] * hiddenStates[i]->transitionMap[hiddenStates[j]] * hiddenStates[j]->emissionMap[data[t+1]] * beta[t+1][j];
                     xi[i][j][t]= numerator/denominator;
                 }
             }
         }
-        vector<vector<double>> gamma;
+        vector<vector<logProbability>> gamma;
         for (const auto& v1:xi){
-            vector<double> tempVec;
+            vector<logProbability> tempVec;
             for (int i = 0; i != T-1; i++){
-                double tempVal = 0;
+                logProbability tempVal = logProbability::fromRegularProbability(0);
                 for (const auto& v2:v1){
                     tempVal+= v2[i];
                 }
@@ -187,11 +187,11 @@ bool HMM::train(const vector<Observable> &data, int iterations) {
             }
             gamma.push_back(tempVec);
         }
-        vector<vector<double>> sumXi2;
+        vector<vector<logProbability>> sumXi2;
         for (const auto& v1:xi) {
-            vector<double> tempVec;
+            vector<logProbability> tempVec;
             for (const auto& v2:v1){
-                double tempVal = 0;
+                logProbability tempVal = logProbability::fromRegularProbability(0);
                 for(const auto& val:v2){
                     tempVal += val;
                 }
@@ -199,9 +199,9 @@ bool HMM::train(const vector<Observable> &data, int iterations) {
             }
             sumXi2.push_back(tempVec);
         }
-        vector<double> sumGamma1;
+        vector<logProbability> sumGamma1;
         for(const auto& v1:gamma){
-            double newVal= 0;
+            logProbability newVal= logProbability::fromRegularProbability(0);
             for (const auto& val:v1){
                 newVal += val;
             }
@@ -214,16 +214,16 @@ bool HMM::train(const vector<Observable> &data, int iterations) {
         }
 
         for(int i = 0; i != xi.size(); i++){
-            double newVal = 0;
+            logProbability newVal = logProbability::fromRegularProbability(0);
             for (const auto& v1:xi) {
                 newVal += v1[i][T - 2];
             }
             gamma[i].push_back(newVal);
         }
 
-        vector<double> denominator;
+        vector<logProbability> denominator;
         for (int i = 0; i!= gamma.size();i++){
-            double newVal = 0;
+            logProbability newVal = logProbability::fromRegularProbability(0);
             for (const auto& val:gamma[i]){
                 newVal += val;
             }
@@ -234,7 +234,7 @@ bool HMM::train(const vector<Observable> &data, int iterations) {
         for (int l = 0; l != observables.size();l++){
             Observable observable = observables[l];
             for (int i = 0; i != hiddenStates.size(); i++){
-                double newVal = 0;
+                logProbability newVal = logProbability::fromRegularProbability(0);
                 for (int j = 0; j != data.size(); j++){
                     if (data[j]==observable){
                            newVal += gamma[i][j];
@@ -269,23 +269,23 @@ void HMM::HMMtoJson(string &file){
     for(int i = 0; i<this->hiddenStates.size(); i++){
         nlohmann::json j2;
         j2["id"] = this->hiddenStates[i]->id;
-        j2["initialProbability"] = this->hiddenStates[i]->initialChance;
+        j2["initialProbability"] = this->hiddenStates[i]->initialChance.getValueAsIs();
         std::vector<nlohmann::json>transitions;
-        map<hiddenState*, double>::iterator it;
+        map<hiddenState*, logProbability>::iterator it;
         for (it = this->hiddenStates[i]->transitionMap.begin(); it != this->hiddenStates[i]->transitionMap.end(); it++){
             nlohmann::json j3;
             j3["id"] = it->first->id;
-            j3["probability"] = it->second;
+            j3["probability"] = it->second.getValueAsIs();
             transitions.push_back(j3);
         }
         j2["transitions"] = transitions;
 
-        map<Observable, double>::iterator it2;
+        map<Observable, logProbability>::iterator it2;
         std::vector<nlohmann::json>emissions;
         for(it2 = this->hiddenStates[i]->emissionMap.begin(); it2 != this->hiddenStates[i]->emissionMap.end(); it2++){
             nlohmann::json j4;
             j4["id"] = it2->first;
-            j4["probability"] = it2->second;
+            j4["probability"] = it2->second.getValueAsIs();
             emissions.push_back(j4);
         }
         j2["emissions"] = emissions;
@@ -300,12 +300,12 @@ void HMM::HMMtoJson(string &file){
     stream.close();
 }
 
-vector<vector<double>> HMM::calculateAlpha(const vector<Observable>& data) {
-    vector<vector<double>> alpha;
+vector<vector<logProbability>> HMM::calculateAlpha(const vector<Observable>& data) {
+    vector<vector<logProbability>> alpha;
     for (int i = 0; i != data.size(); i++){
-        vector<double> tempVector;
+        vector<logProbability> tempVector;
         for (int j = 0; j != hiddenStates.size();j++){
-            tempVector.push_back(0);
+            tempVector.push_back(logProbability::fromRegularProbability(0));
         }
         alpha.push_back(tempVector);
     }
@@ -316,7 +316,7 @@ vector<vector<double>> HMM::calculateAlpha(const vector<Observable>& data) {
 
     for (int t = 1; t != data.size();t++){
         for (int j = 0; j != hiddenStates.size();j++){
-            double newValue = 0;
+            logProbability newValue = logProbability::fromRegularProbability(0);
             int index = 0;
             for (int i = 0; i != hiddenStates.size(); i++){
                 newValue += alpha[t-1][index] * hiddenStates[i]->transitionMap[hiddenStates[j]];
@@ -328,26 +328,26 @@ vector<vector<double>> HMM::calculateAlpha(const vector<Observable>& data) {
     return alpha;
 }
 
-vector<vector<double>> HMM::calculateBeta(const vector<Observable> &data) {
-    vector<vector<double>> beta;
+vector<vector<logProbability>> HMM::calculateBeta(const vector<Observable> &data) {
+    vector<vector<logProbability>> beta;
 
     for (int i = 0; i != data.size(); i++){
-        vector<double> tempVector;
+        vector<logProbability> tempVector;
         for (int j = 0; j != hiddenStates.size();j++){
-            tempVector.push_back(0);
+            tempVector.push_back(logProbability::fromRegularProbability(0));
         }
         beta.push_back(tempVector);
     }
 
-    for (double & i : beta[data.size()-1]){
-        i = 1;
+    for (logProbability & i : beta[data.size()-1]){
+        i = logProbability::fromRegularProbability(1);
     }
 
     for (int t = data.size()-2; t >= 0; t--){
         for (int j = 0; j !=  hiddenStates.size(); j++){
-            double newValue = 0;
+            logProbability newValue = logProbability::fromRegularProbability(0);
             int index = 0;
-            vector<double> temp = beta[t+1];
+            vector<logProbability> temp = beta[t+1];
             for (auto& chance:temp){
                 chance = chance * hiddenStates[index]->emissionMap[data[t+1]];
                 index++;
@@ -361,17 +361,17 @@ vector<vector<double>> HMM::calculateBeta(const vector<Observable> &data) {
     return beta;
 }
 
-double HMM::calculateDenominator(const vector<Observable>& data, vector<vector<double>> &alpha, vector<vector<double>> &beta, int t) {
-    double denominator = 0;
-    vector<double> dotAlphaA;
+logProbability HMM::calculateDenominator(const vector<Observable>& data, vector<vector<logProbability>> &alpha, vector<vector<logProbability>> &beta, int t) {
+    logProbability denominator = logProbability::fromRegularProbability(0);
+    vector<logProbability> dotAlphaA;
     for (int i = 0; i != hiddenStates.size();i++){
-        double value = 0;
+        logProbability value = logProbability::fromRegularProbability(0);
         for (int j = 0; j != hiddenStates.size();j++){
             value += alpha[t][j] * hiddenStates[j]->transitionMap[hiddenStates[i]];
         }
         dotAlphaA.push_back(value);
     }
-    vector<double> dotAlphaAB;
+    vector<logProbability> dotAlphaAB;
     for (int i = 0; i!= hiddenStates.size();i++){
         dotAlphaAB.push_back(dotAlphaA[i]*hiddenStates[i]->emissionMap[data[t+1]]);
     }
@@ -387,14 +387,14 @@ void HMM::print() {
     cout << "transition probabilities:" << endl;
     for (const auto& state:hiddenStates) {
         for(const auto& pair:state->transitionMap){
-            cout << pair.second << " ";
+            cout << pair.second.getValueAsIs() << " ";
         }
         cout << endl;
     }
     cout << "emission probabilities:" << endl;
     for (const auto& state:hiddenStates) {
         for(const auto& pair:state->emissionMap){
-            cout << pair.second << " ";
+            cout << pair.second.getValueAsIs() << " ";
         }
         cout << endl;
     }
@@ -409,8 +409,8 @@ bool HMM::autoTrain(const vector<vector<Observable> > &dataVector, double thresh
     for (auto data:dataVector) {
         while (keepTraining) {
             //save old transition and emission chances
-            vector<map<hiddenState *, double> > transitionVector;
-            vector<map<Observable, double> > emmissionVector;
+            vector<map<hiddenState *, logProbability> > transitionVector;
+            vector<map<Observable, logProbability> > emmissionVector;
             for (auto state: hiddenStates) {
                 transitionVector.push_back(state->transitionMap);
                 emmissionVector.push_back(state->emissionMap);
@@ -429,13 +429,13 @@ bool HMM::autoTrain(const vector<vector<Observable> > &dataVector, double thresh
             // otherwise start training with the next set of data
             for (auto i = 0; i != hiddenStates.size(); i++) {
                 for (auto state: hiddenStates) {
-                    if (abs(hiddenStates[i]->transitionMap[state] - transitionVector[i][state]) >= threshold) {
+                    if (abs((hiddenStates[i]->transitionMap[state] - transitionVector[i][state]).toRegularProbability()) >= threshold) {
                         keepTraining = true;
                         break;
                     }
                 }
                 for (auto observable: observables) {
-                    if (abs(hiddenStates[i]->emissionMap[observable] - emmissionVector[i][observable]) >= threshold) {
+                    if (abs((hiddenStates[i]->emissionMap[observable] - emmissionVector[i][observable]).toRegularProbability()) >= threshold) {
                         keepTraining = true;
                         break;
                     }
