@@ -132,8 +132,9 @@ bool testBaumWelch1(){
     HMM hmm({s,t}, {0,1});
 
     // Train
-    hmm.train(corpus, 10);
-
+    hmm.autoTrain(corpus);
+    hmm.autoTrain(corpus); // Number of iterations should be 1
+    // Check manually
     return true;
 }
 
@@ -141,7 +142,7 @@ int main(){
     if(testBaumWelch1()){
         std::cout << "Yay" << std::endl;
     }
-    if (testHiddenState() && testHMM() && testGesture() && testBaumWelch1()){
+    if (testHiddenState() && testHMM() && testGesture()){
         cout << "all tests passed" << endl;
     }
     else {
