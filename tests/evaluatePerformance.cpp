@@ -14,7 +14,7 @@ void evaluateRecognizeGesture(GestureLibrary& library, std::string pathFolderToE
     for(std::pair<std::string, Gesture> gestureTuple:library.getGestures()){
         std::string gestureName = gestureTuple.first;
         Gesture gesture = gestureTuple.second;
-        const char* gestureFolder = (pathFolderToEvaluate + "/" + gestureName).c_str();
+        std::string gestureFolder = pathFolderToEvaluate + "/" + gestureName;
         unsigned int gestureSucces = 0;
         unsigned int gestureAll = 0;
         for (const auto& entry : filesystem::directory_iterator(gestureFolder)) {
