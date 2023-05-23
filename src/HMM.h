@@ -27,6 +27,8 @@ public:
 
     bool train(const vector<vector<Observable> >&dataVector, int iterations);
 
+    bool betaTrain(const vector<vector<Observable>> &dataVector);
+
     bool autoTrain(const vector<vector<Observable> > &dataVector, double threshold = 0.00001);
 
     void print();
