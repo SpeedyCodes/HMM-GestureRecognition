@@ -452,6 +452,7 @@ const vector<Observable> &HMM::getObservables() const {
 
 std::map<int, double>HMM::learnDistributionFromSamples(std::vector<std::vector<int>>samples){
     std::map<int, double> grade;
+    int alls = 0;
     for(int i = 0; i<samples.size(); i++){
         for(int j = 0; j<samples[i].size(); j++){
             if(grade.count(samples[i][j]) == 0){
@@ -460,14 +461,13 @@ std::map<int, double>HMM::learnDistributionFromSamples(std::vector<std::vector<i
             else{
                 grade[samples[i][j]] += 1;
             }
+            alls++;
         }
     }
-    int teller = 0;
     map<int, double>::iterator it;
     for (it = grade.begin(); it != grade.end(); it++)
     {
-        it->second = it->second/samples[teller].size();
-        teller += 1;
+        it->second = it->second/alls;
     }
     return grade;
 }
