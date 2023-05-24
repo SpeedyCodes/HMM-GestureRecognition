@@ -23,11 +23,9 @@ public:
 
     double likelihood(std::vector<std::vector<Observable> > observations);
 
-    bool train(const vector<Observable> &data, int iterations);
-
     bool train(const vector<vector<Observable> >&dataVector, int iterations);
 
-    bool betaTrain(const vector<vector<Observable>> &dataVector);
+    bool train(const vector<vector<Observable>> &dataVector);
 
     bool autoTrain(const vector<vector<Observable> > &dataVector, double threshold = 0.00001);
 

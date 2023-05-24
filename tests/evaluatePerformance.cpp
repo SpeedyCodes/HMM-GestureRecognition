@@ -31,7 +31,7 @@ void evaluateRecognizeGesture(GestureLibrary& library, std::string pathFolderToE
         allTries += gestureAll;
     }
     std::cerr << "Result for the whole library is " << allGoods << "/" << allTries << std::endl;
-    std::cout << "Congratulation, it's " << allGoods*100.0/allTries << "%" << std::endl;
+    std::cout << "Congratulations, it's " << allGoods*100.0/allTries << "%" << std::endl;
     delete minterface;
 }
 void alt_evaluateRecognizeGesture(GestureLibrary& library, const std::vector<std::string>& videosToEvaluate){
@@ -55,7 +55,7 @@ void alt_evaluateRecognizeGesture(GestureLibrary& library, const std::vector<std
         allTries += gestureAll;
     }
     std::cerr << "Result for the whole library is " << allGoods << "/" << allTries << std::endl;
-    std::cout << "Congratulation, it's " << allGoods*100.0/allTries << "%" << std::endl;
+    std::cout << "Congratulations, it's " << allGoods*100.0/allTries << "%" << std::endl;
     delete minterface;
 }
 
