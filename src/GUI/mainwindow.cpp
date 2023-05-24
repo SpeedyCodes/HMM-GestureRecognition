@@ -82,12 +82,12 @@ void MainWindow::on_cameraToggle_clicked()
         QObject::connect(&mediaPipeInterface, &MediapipeInterface::imageAvailable,
                          this, &MainWindow::paintRealtimeFrame);
         QObject::connect(&mediaPipeInterface, &MediapipeInterface::dataAvailable,
-                         library, &GestureLibrary::realtimeRecognition);
+                         this, &MainWindow::tryRealtimeRecognition);
     }else{
         QObject::disconnect(&mediaPipeInterface, &MediapipeInterface::imageAvailable,
                          this, &MainWindow::paintRealtimeFrame);
         QObject::disconnect(&mediaPipeInterface, &MediapipeInterface::dataAvailable,
-                     library, &GestureLibrary::realtimeRecognition);
+                            this, &MainWindow::tryRealtimeRecognition);
         QImage black;
         black.fill(Qt::black);
         paintRealtimeFrame(black);
@@ -142,6 +142,17 @@ void MainWindow::on_recognizeButton_clicked()
     std::string str = videoInputPath.toStdString();
     const char* p = str.c_str();
     string result = library->recognizeFromVideo(p, &mediaPipeInterface);
-    ui->recognizedListWidget->addItem(QString::fromStdString(result));
+    handleGestureRecognized(result);
+}
+
+void MainWindow::handleGestureRecognized(std::string &gestureID) {
+    ui->recognizedListWidget->addItem(QString::fromStdString(gestureID));
+}
+
+void MainWindow::tryRealtimeRecognition(const std::vector<double> &landmarks) {
+    std::string gesture = library->realtimeRecognition(landmarks);
+    if(!gesture.empty()){
+        handleGestureRecognized(gesture);
+    }
 }
 

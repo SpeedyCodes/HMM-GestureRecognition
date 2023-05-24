@@ -42,6 +42,8 @@ private slots:
 
     void on_recognizeButton_clicked();
 
+    void tryRealtimeRecognition(const std::vector<double> &landmarks);
+
 private:
     Ui::MainWindow *ui;
     SignLanguageWriter* signLanguageWriter;
@@ -51,6 +53,7 @@ private:
     QString videoInputPath;
     
     void refreshGesturesView();
+    void handleGestureRecognized(std::string &gestureID);
 };
 
 #endif // MAINWINDOW_H

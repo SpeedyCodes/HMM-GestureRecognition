@@ -1,13 +1,11 @@
 #include "GestureLibrary.h"
 #include "HMM.h"
 #include "Gesture.h"
-#include "src/utils/MediapipeInterface.h"
 #include "HMMcomponents/hiddenState.h"
 #include <set>
 #include <fstream>
 #include <QDir>
 #include "cmath"
-#include "src/utils/MediapipeInterface.h"
 
 bool GestureLibrary::addGesture(Gesture& gesture){
     gestures.insert(std::make_pair(gesture.getId(), gesture));
@@ -41,7 +39,8 @@ HMM* GestureLibrary::getThresholdHMM() const{
     // Get possible observables
     // TODO: if multiple channels: input of channel number instead of magic number 1
     //  (or if only one channel, remove map from possibleObservables)
-    std::vector<Observable > observables = possibleObservables.at(1);
+
+    std::vector<Observable > observables = possibleObservables.at(0);
     // Create observation map with all zero emission probs
     map<Observable, double> zeroEmissionMap;
     for(Observable observable: observables) zeroEmissionMap[observable] = 0;
@@ -64,16 +63,17 @@ std::string GestureLibrary::realtimeRecognition(const std::vector<double>& frame
     // Preprocess data
     std::vector<Observable > observables = MediapipeInterface::preprocessData(accumulatedLiveFeedData);
     // Get the highest likelihood and the name of the most probable gesture
-    double gestureLikelihood = 0;
-    std::string probableGesture = recognizeGesture(observables, gestureLikelihood);
+    std::pair<std::string, double> probableGesture = recognizeGesture(observables);
     // Get threshold HMM
-    HMM* thresholdHMM = getThresholdHMM();
+    if(thresholdHMM == nullptr){
+        thresholdHMM = getThresholdHMM();
+    }
     // Calculate the likelihood of the threshold HMM
     double threshold = thresholdHMM->likelihood(observables);
     // Remove the first element of the accumulated live feed
     accumulatedLiveFeedData.erase(accumulatedLiveFeedData.begin());
     // Compare the gesture likelihood to threshold
-    if(gestureLikelihood > threshold) return probableGesture;
+    if(probableGesture.second > threshold) return probableGesture;
     else return "";
 }
 bool
@@ -363,7 +363,6 @@ std::string GestureLibrary::recognizeFromVideo(const char* AbsolutePath, Mediapi
     std::vector<std::vector<double>> landmarks = interface->getLandmarksFromVideo(AbsolutePath);
     std::vector<int> data = MediapipeInterface::preprocessData(landmarks);
     std::pair<std::string, double>gesture = recognizeGesture(data);
-    qDebug() << 4;
     return gesture.first;
 }
 
