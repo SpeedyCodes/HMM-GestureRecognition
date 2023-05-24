@@ -363,7 +363,6 @@ std::string GestureLibrary::recognizeFromVideo(const char* AbsolutePath, Mediapi
     std::vector<std::vector<double>> landmarks = interface->getLandmarksFromVideo(AbsolutePath);
     std::vector<int> data = MediapipeInterface::preprocessData(landmarks);
     std::pair<std::string, double>gesture = recognizeGesture(data);
-    qDebug() << 4;
     return gesture.first;
 }
 
