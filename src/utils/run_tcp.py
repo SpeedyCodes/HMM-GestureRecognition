@@ -33,10 +33,10 @@ def run_tcp_sewer():
         a = cv2.imencode('.jpg', image)[1].tobytes()  # Convert image to bytes
         imageSocket.sendall(a)  # Send the frame with the landmarks on it
         results = utils.extract_keypoints(results)  # Extract only necessary landmarks
-        # dummyValue = 280
-        # bytes = dummyValue.to_bytes(4, 'big')
-        bytes_data = struct.pack('>' + 'd' * len(results), *results) # '>' stands for 'big endian'
-        dataSocket.sendall(bytes_data)
+        if results[0]+results[1] != 0: # only transmit when a landmark was found
+            bytes_data = struct.pack('<' + 'd' * len(results), *results) # '<' stands for 'little endian'
+            dataSocket.sendall(bytes_data)
+
 
         k = cv2.waitKey(30) & 0xff
         if k==27:
