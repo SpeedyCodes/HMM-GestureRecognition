@@ -24,7 +24,7 @@ public:
 
     logProbability likelihood(std::vector<std::vector<Observable> > observations);
 
-    bool train(const vector<Observable> &data, int iterations);
+    bool train(const vector<vector<Observable>> &dataVector);
 
     bool train(const vector<vector<Observable> >&dataVector, int iterations);
 

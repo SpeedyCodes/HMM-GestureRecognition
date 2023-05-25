@@ -134,31 +134,36 @@ logProbability HMM::likelihood(std::vector<std::vector<Observable>> observations
     return totalChance;
 }
 
-bool HMM::train(const vector<Observable> &data, int iterations) {
-    if (data.empty()){
-        cerr << "No data was given to train with" << endl;
-        return false;
-    }
-    for (Observable observable: data) {                                                         //TODO als er unregognized observables zijn, moet het direct stoppen of gwn deze observables er uit halen?
-        if(find(observables.begin(), observables.end(), observable) == observables.end()){
-            cerr << "Data contains some unrecognized observables" << endl;
+bool HMM::train(const vector<vector<Observable>> &dataVector){
+    std::vector<vector<vector<logProbability>>> vector_sumXi2;
+    std::vector<std::vector<logProbability>> vector_sumGamma1;
+    std::vector<vector<vector<vector<logProbability>>>> vector_xi;
+    std::vector<vector<vector<logProbability>>> vector_gamma;
+    std::vector<std::vector<logProbability>> vector_denominator;
+    int M = hiddenStates.size();
+    // First loop: get xi, gamma, sumXi2 and sumGamma1 for each vector of observables
+    for (auto data: dataVector) {
+        if (data.empty()) {
+            cerr << "No data was given to train with" << endl;
             return false;
         }
-    }
+        for (Observable observable: data) {                                                         //TODO als er unregognized observables zijn, moet het direct stoppen of gwn deze observables er uit halen?
+            if (find(observables.begin(), observables.end(), observable) == observables.end()) {
+                cerr << "Data contains some unrecognized observables" << endl;
+                return false;
+            }
+        }
+        int T = data.size();
 
-    int M = hiddenStates.size();
-    int T = data.size();
-
-    for (int iteration = 0; iteration != iterations; iteration++){
         vector<vector<logProbability>> alpha = calculateAlpha(data);
         vector<vector<logProbability>> beta = calculateBeta(data);
 
         vector<vector<vector<logProbability>>> xi;
-        for (int i = 0; i != M;i++){
+        for (int i = 0; i != M; i++) {
             vector<vector<logProbability>> tempVector1;
-            for (int j = 0; j != M; j++){
+            for (int j = 0; j != M; j++) {
                 vector<logProbability> tempVector2;
-                for (int k = 0; k != T-1;k++){
+                for (int k = 0; k != T - 1; k++) {
                     tempVector2.push_back(logProbability::fromRegularProbability(0));
                 }
                 tempVector1.push_back(tempVector2);
@@ -166,33 +171,35 @@ bool HMM::train(const vector<Observable> &data, int iterations) {
             xi.push_back(tempVector1);
         }
 
-        for (int t = 0; t!= T-1; t++){
-            logProbability denominator = calculateDenominator(data,alpha,beta,t);
-            for (int i = 0; i != M; i++){
-                for (int j = 0; j != M; j++){
-                    logProbability numerator = alpha[t][i] * hiddenStates[i]->transitionMap[hiddenStates[j]] * hiddenStates[j]->emissionMap[data[t+1]] * beta[t+1][j];
-                    xi[i][j][t]= numerator/denominator;
+        for (int t = 0; t != T - 1; t++) {
+            logProbability denominator = calculateDenominator(data, alpha, beta, t);
+            for (int i = 0; i != M; i++) {
+                for (int j = 0; j != M; j++) {
+                    logProbability numerator = alpha[t][i] * hiddenStates[i]->transitionMap[hiddenStates[j]] *
+                                       hiddenStates[j]->emissionMap[data[t + 1]] * beta[t + 1][j];
+                    xi[i][j][t] = numerator / denominator;
                 }
             }
         }
         vector<vector<logProbability>> gamma;
-        for (const auto& v1:xi){
+        for (const auto &v1: xi) {
             vector<logProbability> tempVec;
-            for (int i = 0; i != T-1; i++){
+            for (int i = 0; i != T - 1; i++) {
                 logProbability tempVal = logProbability::fromRegularProbability(0);
-                for (const auto& v2:v1){
-                    tempVal+= v2[i];
+                for (const auto &v2: v1) {
+                    tempVal += v2[i];
                 }
                 tempVec.push_back(tempVal);
             }
             gamma.push_back(tempVec);
         }
+
         vector<vector<logProbability>> sumXi2;
-        for (const auto& v1:xi) {
+        for (const auto &v1: xi) {
             vector<logProbability> tempVec;
-            for (const auto& v2:v1){
+            for (const auto &v2: v1) {
                 logProbability tempVal = logProbability::fromRegularProbability(0);
-                for(const auto& val:v2){
+                for (const auto &val: v2) {
                     tempVal += val;
                 }
                 tempVec.push_back(tempVal);
@@ -200,66 +207,108 @@ bool HMM::train(const vector<Observable> &data, int iterations) {
             sumXi2.push_back(tempVec);
         }
         vector<logProbability> sumGamma1;
-        for(const auto& v1:gamma){
-            logProbability newVal= logProbability::fromRegularProbability(0);
-            for (const auto& val:v1){
+        for (const auto &v1: gamma) {
+            logProbability newVal = logProbability::fromRegularProbability(0);
+            for (const auto &val: v1) {
                 newVal += val;
             }
             sumGamma1.push_back(newVal);
         }
+        vector_xi.push_back(xi);
+        vector_gamma.push_back(gamma);
+        vector_sumGamma1.push_back(sumGamma1);
+        vector_sumXi2.push_back(sumXi2);
+    }
+    // Calculate sum of sumXi2 and sumGamma1
+    vector<logProbability> f_zero(hiddenStates.size(), logProbability::fromRegularProbability(0));
+    vector<vector<logProbability>> sumXi2(hiddenStates.size(), f_zero); // TODO: set here zero's
+    for(auto Xi2:vector_sumXi2){
         for (int i = 0; i != hiddenStates.size(); i++){
             for (int j = 0; j != hiddenStates.size(); j++){
-                hiddenStates[i]->transitionMap[hiddenStates[j]] = sumXi2[i][j] / sumGamma1[i];
+                sumXi2[i][j] += Xi2[i][j];
             }
         }
+    }
+    std::vector<logProbability> sumGamma1(hiddenStates.size(), logProbability::fromRegularProbability(0)); // TODO: zero's
+    for(auto SG: vector_sumGamma1){
+        for(int i = 0; i != hiddenStates.size(); i++){
+            sumGamma1[i] += SG[i];
+        }
+    }
+    // Iterate
+    for (int i = 0; i != hiddenStates.size(); i++){
+        for (int j = 0; j != hiddenStates.size(); j++){
+            hiddenStates[i]->transitionMap[hiddenStates[j]] = sumXi2[i][j] / sumGamma1[i];
+        }
+    }
 
-        for(int i = 0; i != xi.size(); i++){
+    // Set all observ to zero's
+    for(int i = 0; i != hiddenStates.size(); i++){
+        for(auto observ: observables){
+            hiddenStates[i]->emissionMap[observ] = logProbability::fromRegularProbability(0);
+        }
+    }
+    int iter = 0;
+    for(auto data:dataVector) {
+        vector<vector<vector<logProbability>>> xi = vector_xi[iter];
+        vector<vector<logProbability>> gamma = vector_gamma[iter];
+        int T = data.size();
+        // Adjust gamma's and xi's
+        for (int i = 0; i != xi.size(); i++) {
             logProbability newVal = logProbability::fromRegularProbability(0);
-            for (const auto& v1:xi) {
+            for (const auto &v1: xi) {
                 newVal += v1[i][T - 2];
             }
             gamma[i].push_back(newVal);
         }
 
         vector<logProbability> denominator;
-        for (int i = 0; i!= gamma.size();i++){
+        for (int i = 0; i != gamma.size(); i++) {
             logProbability newVal = logProbability::fromRegularProbability(0);
-            for (const auto& val:gamma[i]){
+            for (const auto &val: gamma[i]) {
                 newVal += val;
             }
             denominator.push_back(newVal);
         }
-
-
+        vector_gamma[iter] = gamma;
+        vector_denominator.push_back(denominator);
+        iter++;
         for (int l = 0; l != observables.size();l++){
             Observable observable = observables[l];
             for (int i = 0; i != hiddenStates.size(); i++){
                 logProbability newVal = logProbability::fromRegularProbability(0);
                 for (int j = 0; j != data.size(); j++){
                     if (data[j]==observable){
-                           newVal += gamma[i][j];
+                        newVal += gamma[i][j];
                     }
                 }
-                hiddenStates[i]->emissionMap[observable] = newVal;
-            }
-        }
-
-        for (int i = 0; i != hiddenStates.size(); i++){
-            for(int j = 0; j != observables.size(); j++){
-                hiddenStates[i]->emissionMap[observables[j]] = hiddenStates[i]->emissionMap[observables[j]]/denominator[i];
+                hiddenStates[i]->emissionMap[observable] += newVal;
             }
         }
     }
+    // Sum all and denominators
+    std::vector<logProbability> denominator(hiddenStates.size(), logProbability::fromRegularProbability(0));
+    for(auto denom:vector_denominator){
+        for(int i = 0; i != hiddenStates.size(); i++){
+            denominator[i] += denom[i];
+        }
+    }
+    // Just do this loop
+    for (int i = 0; i != hiddenStates.size(); i++){
+        for(int j = 0; j != observables.size(); j++){
+            hiddenStates[i]->emissionMap[observables[j]] = hiddenStates[i]->emissionMap[observables[j]]/denominator[i];
+        }
+    }
+
     return checkValues();
 }
 
 bool HMM::train(const vector<vector<Observable>> &dataVector, int iterations) {
-    bool success;
-    for(const auto& data:dataVector){
-        success = train(data,iterations);
-        if(!success) return success;
+    bool success = true;
+    for(int i = 0; i != iterations; i++){
+        success = success && train(dataVector);
     }
-    return true;
+    return success;
 }
 
 void HMM::HMMtoJson(string &file){
@@ -406,43 +455,46 @@ const vector<hiddenState *> &HMM::getHiddenStates() const {
 
 bool HMM::autoTrain(const vector<vector<Observable> > &dataVector, double threshold) {
     bool keepTraining = true;
-    for (auto data:dataVector) {
-        while (keepTraining) {
-            //save old transition and emission chances
-            vector<map<hiddenState *, logProbability> > transitionVector;
-            vector<map<Observable, logProbability> > emmissionVector;
-            for (auto state: hiddenStates) {
-                transitionVector.push_back(state->transitionMap);
-                emmissionVector.push_back(state->emissionMap);
-            }
+    int iter = 0;
+    while (keepTraining) {
+        //save old transition and emission chances
+        vector<map<hiddenState *, logProbability> > transitionVector;
+        vector<map<Observable, logProbability> > emmissionVector;
+        for (auto state: hiddenStates) {
+            transitionVector.push_back(state->transitionMap);
+            emmissionVector.push_back(state->emissionMap);
+        }
 
-            //train the HMM
-            bool success = false;
-            success = train(data, 1);
-            if (!success) {
-                cerr << "training failed, was there something wrong with the given data?" << endl;
-                return false;
-            }
-            keepTraining = false;
-            // check if any transition or emission chances got changed by more than the given threshold
-            // if so, continue training with the current data
-            // otherwise start training with the next set of data
-            for (auto i = 0; i != hiddenStates.size(); i++) {
-                for (auto state: hiddenStates) {
-                    if (abs((hiddenStates[i]->transitionMap[state] - transitionVector[i][state]).toRegularProbability()) >= threshold) {
-                        keepTraining = true;
-                        break;
-                    }
+        //train the HMM
+        bool success = false;
+        success = train(dataVector);
+        if (!success) {
+            cerr << "training failed, was there something wrong with the given data?" << endl;
+            return false;
+        }
+        keepTraining = false;
+        // check if any transition or emission chances got changed by more than the given threshold
+        // if so, continue training with the current data
+        // otherwise start training with the next set of data
+        for (auto i = 0; i != hiddenStates.size(); i++) {
+            for (auto state: hiddenStates) {
+                if (abs((hiddenStates[i]->transitionMap[state] -
+                         transitionVector[i][state]).toRegularProbability()) >= threshold) {
+                    keepTraining = true;
+                    break;
                 }
-                for (auto observable: observables) {
-                    if (abs((hiddenStates[i]->emissionMap[observable] - emmissionVector[i][observable]).toRegularProbability()) >= threshold) {
-                        keepTraining = true;
-                        break;
-                    }
+            }
+            for (auto observable: observables) {
+                if (abs((hiddenStates[i]->emissionMap[observable] -
+                         emmissionVector[i][observable]).toRegularProbability()) >= threshold) {
+                    keepTraining = true;
+                    break;
                 }
             }
         }
+        iter++;
     }
+    cout << "Number of iterations for autoTrain(): " << iter << endl;
     return true;
 }
 
