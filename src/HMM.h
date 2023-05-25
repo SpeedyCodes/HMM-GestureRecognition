@@ -43,6 +43,8 @@ private:
 
     double calculateDenominator(const vector<Observable> &data, vector<vector<double>> &alpha,
                                 vector<vector<double>> &beta, int t);
+
+    map<int, double> learnDistributionFromSamples(vector<vector<int>> samples);
 };
 
 

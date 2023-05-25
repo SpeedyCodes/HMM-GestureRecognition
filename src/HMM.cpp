@@ -499,3 +499,25 @@ bool HMM::autoTrain(const vector<vector<Observable> > &dataVector, double thresh
 const vector<Observable> &HMM::getObservables() const {
     return observables;
 }
+
+std::map<int, double>HMM::learnDistributionFromSamples(std::vector<std::vector<int>>samples){
+    std::map<int, double> grade;
+    int alls = 0;
+    for(int i = 0; i<samples.size(); i++){
+        for(int j = 0; j<samples[i].size(); j++){
+            if(grade.count(samples[i][j]) == 0){
+                grade[samples[i][j]] = 1;
+            }
+            else{
+                grade[samples[i][j]] += 1;
+            }
+            alls++;
+        }
+    }
+    map<int, double>::iterator it;
+    for (it = grade.begin(); it != grade.end(); it++)
+    {
+        it->second = it->second/alls;
+    }
+    return grade;
+}
