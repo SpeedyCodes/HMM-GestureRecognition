@@ -162,6 +162,10 @@ std::vector<int> MediapipeInterface::preprocessData(const std::vector<std::vecto
     std::vector<double> previousFrameData;
     bool firstFrame = true;
     for(const std::vector<double>& frameData: data){
+        if(frameData.empty()) {
+            std::cerr << "Frame data is empty" <<std::endl;
+            continue;
+        }
         if(firstFrame){
             previousFrameData = frameData;
             firstFrame = false;

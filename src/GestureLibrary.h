@@ -37,7 +37,7 @@ public:
     bool isolatedRecognition(std::string& videoPath, std::string& gestureID);
     std::string realtimeRecognition(const std::vector<double>& frameLandmarks);
     bool
-    fitAndSelect(std::vector<std::vector<Observable> > GestureData, const std::string &gestureID, int stateAmount = 10,
+    fitAndSelect(std::vector<std::vector<Observable> > GestureData, const std::string &gestureID, int stateAmount = 5,
                  double threshold = 0.0001);
     const std::map<std::string, Gesture>& getGestures() const;
 

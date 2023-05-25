@@ -1,6 +1,7 @@
 #include <iostream>
 #include "src/Gesture.h"
 #include "src/HMM.h"
+#include "src/HMMcomponents/hiddenState.h"
 using namespace std;
 
 bool testHiddenState(){
@@ -167,9 +168,33 @@ bool testLogProbability() {
     return true;
 }
 
+bool testBaumWelch1(){
+
+    // Set corpus
+    std::vector<Observable > abba = {0,1,1,0};
+    std::vector<Observable > bab = {1,0,1};
+    std::vector<std::vector<Observable >> corpus(10, abba);
+    std::vector<std::vector<Observable >> corpus2(20, bab);
+    corpus.insert(corpus.end(), corpus2.begin(), corpus2.end());
+
+    // Set first HMM
+    hiddenState* s = new hiddenState(1, 0.85);
+    hiddenState* t= new hiddenState(2, 0.15);
+    s->emissionMap = {{0,0.4}, {1,0.6}};
+    t->emissionMap = {{0,0.5}, {1,0.5}};
+    s->transitionMap = {{s, 0.3}, {t, 0.7}};
+    t->transitionMap = {{s, 0.1}, {t, 0.9}};
+    HMM hmm({s,t}, {0,1});
+
+    // Train
+    hmm.autoTrain(corpus);
+    hmm.autoTrain(corpus); // Number of iterations should be 1
+    // Check manually
+    return true;
+}
 
 int main(){
-    if (testHiddenState() && testHMM() && testLogProbability()){
+    if (testHiddenState() && testHMM() && testLogProbability() && testBaumWelch1()){
         cout << "all tests passed" << endl;
     }
     else {

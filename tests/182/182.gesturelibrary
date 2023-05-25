@@ -1,0 +1,13 @@
+{
+    "gestures": {
+        "one": {
+            "HMMpath": "one.json"
+        },
+        "two": {
+            "HMMpath": "two.json"
+        },
+        "eight": {
+            "HMMpath": "eight.json"
+        }
+    }
+}

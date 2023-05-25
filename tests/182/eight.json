@@ -1,0 +1,356 @@
+{
+    "hiddenStates": [
+        {
+            "emissions": [
+                {
+                    "id": 0,
+                    "probability": 0.034238537626438165
+                },
+                {
+                    "id": 1,
+                    "probability": 0.04601519511603608
+                },
+                {
+                    "id": 2,
+                    "probability": 0.047567729213100735
+                },
+                {
+                    "id": 3,
+                    "probability": 0.052970543964808624
+                },
+                {
+                    "id": 4,
+                    "probability": 0.1292992667321286
+                },
+                {
+                    "id": 14,
+                    "probability": 0.17773762325679257
+                },
+                {
+                    "id": 15,
+                    "probability": 0.19705626919479907
+                },
+                {
+                    "id": 16,
+                    "probability": 0.17204218225613838
+                },
+                {
+                    "id": 17,
+                    "probability": 0.11649981092673961
+                },
+                {
+                    "id": 18,
+                    "probability": 0.026572841713018283
+                }
+            ],
+            "id": 0,
+            "initialProbability": 1.0,
+            "transitions": [
+                {
+                    "id": 0,
+                    "probability": 0.9287606499609915
+                },
+                {
+                    "id": 4,
+                    "probability": 0.0
+                },
+                {
+                    "id": 1,
+                    "probability": 0.07123935003900876
+                },
+                {
+                    "id": 3,
+                    "probability": 0.0
+                },
+                {
+                    "id": 2,
+                    "probability": 0.0
+                }
+            ]
+        },
+        {
+            "emissions": [
+                {
+                    "id": 0,
+                    "probability": 6.665746125727014e-124
+                },
+                {
+                    "id": 1,
+                    "probability": 0.26223185541511274
+                },
+                {
+                    "id": 2,
+                    "probability": 0.2803699849916277
+                },
+                {
+                    "id": 3,
+                    "probability": 0.2601231390578303
+                },
+                {
+                    "id": 4,
+                    "probability": 0.19429202577108623
+                },
+                {
+                    "id": 14,
+                    "probability": 1.3165475871060436e-27
+                },
+                {
+                    "id": 15,
+                    "probability": 0.0029829947643431752
+                },
+                {
+                    "id": 16,
+                    "probability": 0.0
+                },
+                {
+                    "id": 17,
+                    "probability": 6.366942867486692e-53
+                },
+                {
+                    "id": 18,
+                    "probability": 5.724569526463683e-261
+                }
+            ],
+            "id": 1,
+            "initialProbability": 0.0,
+            "transitions": [
+                {
+                    "id": 0,
+                    "probability": 0.0
+                },
+                {
+                    "id": 4,
+                    "probability": 0.0
+                },
+                {
+                    "id": 1,
+                    "probability": 0.8017813731889339
+                },
+                {
+                    "id": 3,
+                    "probability": 0.0
+                },
+                {
+                    "id": 2,
+                    "probability": 0.1982186268110661
+                }
+            ]
+        },
+        {
+            "emissions": [
+                {
+                    "id": 0,
+                    "probability": 0.09715610184452006
+                },
+                {
+                    "id": 1,
+                    "probability": 0.014333473364971315
+                },
+                {
+                    "id": 2,
+                    "probability": 2.400915075280943e-64
+                },
+                {
+                    "id": 3,
+                    "probability": 1.81589894723262e-165
+                },
+                {
+                    "id": 4,
+                    "probability": 6.643291650989741e-114
+                },
+                {
+                    "id": 14,
+                    "probability": 0.18116548837950744
+                },
+                {
+                    "id": 15,
+                    "probability": 0.18252634071105986
+                },
+                {
+                    "id": 16,
+                    "probability": 0.18071934346933352
+                },
+                {
+                    "id": 17,
+                    "probability": 0.21587147870503912
+                },
+                {
+                    "id": 18,
+                    "probability": 0.12822777352556883
+                }
+            ],
+            "id": 2,
+            "initialProbability": 0.0,
+            "transitions": [
+                {
+                    "id": 0,
+                    "probability": 0.0
+                },
+                {
+                    "id": 4,
+                    "probability": 0.0
+                },
+                {
+                    "id": 1,
+                    "probability": 0.0
+                },
+                {
+                    "id": 3,
+                    "probability": 0.1703929783821073
+                },
+                {
+                    "id": 2,
+                    "probability": 0.8296070216178932
+                }
+            ]
+        },
+        {
+            "emissions": [
+                {
+                    "id": 0,
+                    "probability": 6.030370885577719e-230
+                },
+                {
+                    "id": 1,
+                    "probability": 0.010885617069555592
+                },
+                {
+                    "id": 2,
+                    "probability": 0.2405412580417045
+                },
+                {
+                    "id": 3,
+                    "probability": 0.43471564849098615
+                },
+                {
+                    "id": 4,
+                    "probability": 0.2566806038810855
+                },
+                {
+                    "id": 14,
+                    "probability": 0.05717687251666841
+                },
+                {
+                    "id": 15,
+                    "probability": 1.8070389229893764e-72
+                },
+                {
+                    "id": 16,
+                    "probability": 7.456243592544458e-282
+                },
+                {
+                    "id": 17,
+                    "probability": 0.0
+                },
+                {
+                    "id": 18,
+                    "probability": 0.0
+                }
+            ],
+            "id": 3,
+            "initialProbability": 0.0,
+            "transitions": [
+                {
+                    "id": 0,
+                    "probability": 0.0
+                },
+                {
+                    "id": 4,
+                    "probability": 0.12291759613504154
+                },
+                {
+                    "id": 1,
+                    "probability": 0.0
+                },
+                {
+                    "id": 3,
+                    "probability": 0.8770824038649587
+                },
+                {
+                    "id": 2,
+                    "probability": 0.0
+                }
+            ]
+        },
+        {
+            "emissions": [
+                {
+                    "id": 0,
+                    "probability": 0.03647757872075835
+                },
+                {
+                    "id": 1,
+                    "probability": 0.025973592719495064
+                },
+                {
+                    "id": 2,
+                    "probability": 0.0419194833794497
+                },
+                {
+                    "id": 3,
+                    "probability": 0.07705464651611103
+                },
+                {
+                    "id": 4,
+                    "probability": 0.10670708388139583
+                },
+                {
+                    "id": 14,
+                    "probability": 0.13640982255498707
+                },
+                {
+                    "id": 15,
+                    "probability": 0.18368213991134505
+                },
+                {
+                    "id": 16,
+                    "probability": 0.2592341698003682
+                },
+                {
+                    "id": 17,
+                    "probability": 0.11430919762024261
+                },
+                {
+                    "id": 18,
+                    "probability": 0.018232284895846967
+                }
+            ],
+            "id": 4,
+            "initialProbability": 0.0,
+            "transitions": [
+                {
+                    "id": 0,
+                    "probability": 0.0
+                },
+                {
+                    "id": 4,
+                    "probability": 1.0
+                },
+                {
+                    "id": 1,
+                    "probability": 0.0
+                },
+                {
+                    "id": 3,
+                    "probability": 0.0
+                },
+                {
+                    "id": 2,
+                    "probability": 0.0
+                }
+            ]
+        }
+    ],
+    "observables": [
+        0,
+        1,
+        2,
+        3,
+        4,
+        14,
+        15,
+        16,
+        17,
+        18
+    ]
+}

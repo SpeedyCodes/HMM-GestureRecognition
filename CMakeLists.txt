@@ -38,7 +38,14 @@ add_executable(HMM_GestureRecognition
 add_executable(Tests tests/tests.cpp src/HMM.cpp src/HMM.h src/HMMcomponents/hiddenState.h
         src/HMMcomponents/hiddenState.cpp src/Gesture.cpp src/Gesture.h src/HMMcomponents/logProbability.cpp src/HMMcomponents/logProbability.h)
 
-target_link_libraries(HMM_GestureRecognition PRIVATE Qt6::Widgets Qt6::Network Qt6::Multimedia Qt6::MultimediaWidgets)
+add_executable(Performance tests/evaluatePerformance.cpp src/utils/MediapipeInterface.cpp src/utils/MediapipeInterface.h
+        src/HMM.cpp
+        src/HMM.h src/HMMcomponents/hiddenState.h src/HMMcomponents/hiddenState.cpp
+        src/Gesture.cpp src/Gesture.h src/GestureLibrary.cpp src/GestureLibrary.h)
+
+set(Qt_Libs Qt6::Widgets Qt6::Network Qt6::Multimedia Qt6::MultimediaWidgets)
+target_link_libraries(HMM_GestureRecognition PRIVATE ${Qt_Libs})
+target_link_libraries(Performance PRIVATE ${Qt_Libs})
 set_target_properties(HMM_GestureRecognition PROPERTIES
         #WIN32_EXECUTABLE ON
         MACOSX_BUNDLE ON
