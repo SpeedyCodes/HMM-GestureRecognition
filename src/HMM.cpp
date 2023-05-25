@@ -134,31 +134,36 @@ double HMM::likelihood(const std::vector<std::vector<Observable>>& observations)
     return totalChance;
 }
 
-bool HMM::train(const vector<Observable> &data, int iterations) {
-    if (data.empty()){
-        cerr << "No data was given to train with" << endl;
-        return false;
-    }
-    for (Observable observable: data) {                                                         //TODO als er unregognized observables zijn, moet het direct stoppen of gwn deze observables er uit halen?
-        if(find(observables.begin(), observables.end(), observable) == observables.end()){
-            cerr << "Data contains some unrecognized observables" << endl;
+bool HMM::train(const vector<vector<Observable>> &dataVector){
+    std::vector<vector<vector<double>>> vector_sumXi2;
+    std::vector<std::vector<double>> vector_sumGamma1;
+    std::vector<vector<vector<vector<double>>>> vector_xi;
+    std::vector<vector<vector<double>>> vector_gamma;
+    std::vector<std::vector<double>> vector_denominator;
+    int M = hiddenStates.size();
+    // First loop: get xi, gamma, sumXi2 and sumGamma1 for each vector of observables
+    for (auto data: dataVector) {
+        if (data.empty()) {
+            cerr << "No data was given to train with" << endl;
             return false;
         }
-    }
+        for (Observable observable: data) {                                                         //TODO als er unregognized observables zijn, moet het direct stoppen of gwn deze observables er uit halen?
+            if (find(observables.begin(), observables.end(), observable) == observables.end()) {
+                cerr << "Data contains some unrecognized observables" << endl;
+                return false;
+            }
+        }
+        int T = data.size();
 
-    int M = hiddenStates.size();
-    int T = data.size();
-
-    for (int iteration = 0; iteration != iterations; iteration++){
         vector<vector<double>> alpha = calculateAlpha(data);
         vector<vector<double>> beta = calculateBeta(data);
 
         vector<vector<vector<double>>> xi;
-        for (int i = 0; i != M;i++){
+        for (int i = 0; i != M; i++) {
             vector<vector<double>> tempVector1;
-            for (int j = 0; j != M; j++){
+            for (int j = 0; j != M; j++) {
                 vector<double> tempVector2;
-                for (int k = 0; k != T-1;k++){
+                for (int k = 0; k != T - 1; k++) {
                     tempVector2.push_back(0);
                 }
                 tempVector1.push_back(tempVector2);
@@ -166,33 +171,35 @@ bool HMM::train(const vector<Observable> &data, int iterations) {
             xi.push_back(tempVector1);
         }
 
-        for (int t = 0; t!= T-1; t++){
-            double denominator = calculateDenominator(data,alpha,beta,t);
-            for (int i = 0; i != M; i++){
-                for (int j = 0; j != M; j++){
-                    double numerator = alpha[t][i] * hiddenStates[i]->transitionMap[hiddenStates[j]] * hiddenStates[j]->emissionMap[data[t+1]] * beta[t+1][j];
-                    xi[i][j][t]= numerator/denominator;
+        for (int t = 0; t != T - 1; t++) {
+            double denominator = calculateDenominator(data, alpha, beta, t);
+            for (int i = 0; i != M; i++) {
+                for (int j = 0; j != M; j++) {
+                    double numerator = alpha[t][i] * hiddenStates[i]->transitionMap[hiddenStates[j]] *
+                                       hiddenStates[j]->emissionMap[data[t + 1]] * beta[t + 1][j];
+                    xi[i][j][t] = numerator / denominator;
                 }
             }
         }
         vector<vector<double>> gamma;
-        for (const auto& v1:xi){
+        for (const auto &v1: xi) {
             vector<double> tempVec;
-            for (int i = 0; i != T-1; i++){
+            for (int i = 0; i != T - 1; i++) {
                 double tempVal = 0;
-                for (const auto& v2:v1){
-                    tempVal+= v2[i];
+                for (const auto &v2: v1) {
+                    tempVal += v2[i];
                 }
                 tempVec.push_back(tempVal);
             }
             gamma.push_back(tempVec);
         }
+
         vector<vector<double>> sumXi2;
-        for (const auto& v1:xi) {
+        for (const auto &v1: xi) {
             vector<double> tempVec;
-            for (const auto& v2:v1){
+            for (const auto &v2: v1) {
                 double tempVal = 0;
-                for(const auto& val:v2){
+                for (const auto &val: v2) {
                     tempVal += val;
                 }
                 tempVec.push_back(tempVal);
@@ -200,64 +207,106 @@ bool HMM::train(const vector<Observable> &data, int iterations) {
             sumXi2.push_back(tempVec);
         }
         vector<double> sumGamma1;
-        for(const auto& v1:gamma){
-            double newVal= 0;
-            for (const auto& val:v1){
+        for (const auto &v1: gamma) {
+            double newVal = 0;
+            for (const auto &val: v1) {
                 newVal += val;
             }
             sumGamma1.push_back(newVal);
         }
+        vector_xi.push_back(xi);
+        vector_gamma.push_back(gamma);
+        vector_sumGamma1.push_back(sumGamma1);
+        vector_sumXi2.push_back(sumXi2);
+    }
+    // Calculate sum of sumXi2 and sumGamma1
+    vector<double> f_zero(hiddenStates.size(), 0);
+    vector<vector<double>> sumXi2(hiddenStates.size(), f_zero); // TODO: set here zero's
+    for(auto Xi2:vector_sumXi2){
         for (int i = 0; i != hiddenStates.size(); i++){
             for (int j = 0; j != hiddenStates.size(); j++){
-                hiddenStates[i]->transitionMap[hiddenStates[j]] = sumXi2[i][j] / sumGamma1[i];
+                sumXi2[i][j] += Xi2[i][j];
             }
         }
+    }
+    std::vector<double> sumGamma1(hiddenStates.size(), 0); // TODO: zero's
+    for(auto SG: vector_sumGamma1){
+        for(int i = 0; i != hiddenStates.size(); i++){
+            sumGamma1[i] += SG[i];
+        }
+    }
+    // Iterate
+    for (int i = 0; i != hiddenStates.size(); i++){
+        for (int j = 0; j != hiddenStates.size(); j++){
+            hiddenStates[i]->transitionMap[hiddenStates[j]] = sumXi2[i][j] / sumGamma1[i];
+        }
+    }
 
-        for(int i = 0; i != xi.size(); i++){
+    // Set all observ to zero's
+    for(int i = 0; i != hiddenStates.size(); i++){
+        for(auto observ: observables){
+            hiddenStates[i]->emissionMap[observ] = 0;
+        }
+    }
+    int iter = 0;
+    for(auto data:dataVector) {
+        vector<vector<vector<double>>> xi = vector_xi[iter];
+        vector<vector<double>> gamma = vector_gamma[iter];
+        int T = data.size();
+        // Adjust gamma's and xi's
+        for (int i = 0; i != xi.size(); i++) {
             double newVal = 0;
-            for (const auto& v1:xi) {
+            for (const auto &v1: xi) {
                 newVal += v1[i][T - 2];
             }
             gamma[i].push_back(newVal);
         }
 
         vector<double> denominator;
-        for (int i = 0; i!= gamma.size();i++){
+        for (int i = 0; i != gamma.size(); i++) {
             double newVal = 0;
-            for (const auto& val:gamma[i]){
+            for (const auto &val: gamma[i]) {
                 newVal += val;
             }
             denominator.push_back(newVal);
         }
-
-
+        vector_gamma[iter] = gamma;
+        vector_denominator.push_back(denominator);
+        iter++;
         for (int l = 0; l != observables.size();l++){
             Observable observable = observables[l];
             for (int i = 0; i != hiddenStates.size(); i++){
                 double newVal = 0;
                 for (int j = 0; j != data.size(); j++){
                     if (data[j]==observable){
-                           newVal += gamma[i][j];
+                        newVal += gamma[i][j];
                     }
                 }
-                hiddenStates[i]->emissionMap[observable] = newVal;
+                hiddenStates[i]->emissionMap[observable] += newVal;
             }
         }
-
+    }
+        // Sum all and denominators
+    std::vector<double> denominator(hiddenStates.size(), 0);
+    for(auto denom:vector_denominator){
+        for(int i = 0; i != hiddenStates.size(); i++){
+            denominator[i] += denom[i];
+        }
+    }
+        // Just do this loop
         for (int i = 0; i != hiddenStates.size(); i++){
             for(int j = 0; j != observables.size(); j++){
                 hiddenStates[i]->emissionMap[observables[j]] = hiddenStates[i]->emissionMap[observables[j]]/denominator[i];
             }
         }
-    }
+
     return checkValues();
 }
 
 bool HMM::train(const vector<vector<Observable>> &dataVector, int iterations) {
     bool success;
-    for(const auto& data:dataVector){
-        success = train(data,iterations);
-        if(!success) return success;
+    for(int i = 0; i != iterations; i++){
+        train(dataVector);
     }
     return true;
 }
@@ -406,43 +455,44 @@ const vector<hiddenState *> &HMM::getHiddenStates() const {
 
 bool HMM::autoTrain(const vector<vector<Observable> > &dataVector, double threshold) {
     bool keepTraining = true;
-    for (auto data:dataVector) {
-        while (keepTraining) {
-            //save old transition and emission chances
-            vector<map<hiddenState *, double> > transitionVector;
-            vector<map<Observable, double> > emmissionVector;
-            for (auto state: hiddenStates) {
-                transitionVector.push_back(state->transitionMap);
-                emmissionVector.push_back(state->emissionMap);
-            }
+    int iter = 0;
+    while (keepTraining) {
+        //save old transition and emission chances
+        vector<map<hiddenState *, double> > transitionVector;
+        vector<map<Observable, double> > emmissionVector;
+        for (auto state: hiddenStates) {
+            transitionVector.push_back(state->transitionMap);
+            emmissionVector.push_back(state->emissionMap);
+        }
 
-            //train the HMM
-            bool success = false;
-            success = train(data, 1);
-            if (!success) {
-                cerr << "training failed, was there something wrong with the given data?" << endl;
-                return false;
-            }
-            keepTraining = false;
-            // check if any transition or emission chances got changed by more than the given threshold
-            // if so, continue training with the current data
-            // otherwise start training with the next set of data
-            for (auto i = 0; i != hiddenStates.size(); i++) {
-                for (auto state: hiddenStates) {
-                    if (abs(hiddenStates[i]->transitionMap[state] - transitionVector[i][state]) >= threshold) {
-                        keepTraining = true;
-                        break;
-                    }
+        //train the HMM
+        bool success = false;
+        success = train(dataVector, 1);
+        if (!success) {
+            cerr << "training failed, was there something wrong with the given data?" << endl;
+            return false;
+        }
+        keepTraining = false;
+        // check if any transition or emission chances got changed by more than the given threshold
+        // if so, continue training with the current data
+        // otherwise start training with the next set of data
+        for (auto i = 0; i != hiddenStates.size(); i++) {
+            for (auto state: hiddenStates) {
+                if (abs(hiddenStates[i]->transitionMap[state] - transitionVector[i][state]) >= threshold) {
+                    keepTraining = true;
+                    break;
                 }
-                for (auto observable: observables) {
-                    if (abs(hiddenStates[i]->emissionMap[observable] - emmissionVector[i][observable]) >= threshold) {
-                        keepTraining = true;
-                        break;
-                    }
+            }
+            for (auto observable: observables) {
+                if (abs(hiddenStates[i]->emissionMap[observable] - emmissionVector[i][observable]) >= threshold) {
+                    keepTraining = true;
+                    break;
                 }
             }
         }
+        iter++;
     }
+    std::cout << "Number of iterations for autoTrain(): " << iter << std::endl;
     return true;
 }
 
@@ -452,19 +502,19 @@ const vector<Observable> &HMM::getObservables() const {
 
 HMM::HMM(const HMM& other): observables(other.observables) {
     // Create a map to store the original to copied hiddenState pointers
-    std::map<hiddenState*, hiddenState*> originalToCopy;
-    std::vector<hiddenState*> newHiddenStates;
+    std::map<hiddenState *, hiddenState *> originalToCopy;
+    std::vector<hiddenState *> newHiddenStates;
 
     // Make copy of each hidden state and fill it in originalToCopy
-    for(auto state:other.hiddenStates){
-        hiddenState* newState = new hiddenState(*state);
+    for (auto state: other.hiddenStates) {
+        hiddenState *newState = new hiddenState(*state);
         originalToCopy[state] = newState;
         newHiddenStates.push_back(newState);
     }
 
     // Iterate over all state and correct states
-    for(hiddenState* state:newHiddenStates){
-        for (const auto& entry : state->transitionMap) {
+    for (hiddenState *state: newHiddenStates) {
+        for (const auto &entry: state->transitionMap) {
             // Find the corresponding copied hiddenState pointer in the map
             auto it = originalToCopy.find(entry.first);
             if (it != originalToCopy.end()) {
@@ -473,12 +523,34 @@ HMM::HMM(const HMM& other): observables(other.observables) {
         }
     }
     // Remove old states
-    for(hiddenState* state:newHiddenStates){
-        for (std::map<hiddenState*,double>::iterator it = state->transitionMap.begin(); it != state->transitionMap.end();) {
-            if(std::find(newHiddenStates.begin(), newHiddenStates.end(), it->first) == newHiddenStates.end()){
+    for (hiddenState *state: newHiddenStates) {
+        for (std::map<hiddenState *, double>::iterator it = state->transitionMap.begin();
+             it != state->transitionMap.end();) {
+            if (std::find(newHiddenStates.begin(), newHiddenStates.end(), it->first) == newHiddenStates.end()) {
                 state->transitionMap.erase((it++)->first);
-            }else{++it;}
+            } else { ++it; }
         }
     }
     hiddenStates = newHiddenStates;
+}
+std::map<int, double>HMM::learnDistributionFromSamples(std::vector<std::vector<int>>samples){
+    std::map<int, double> grade;
+    int alls = 0;
+    for(int i = 0; i<samples.size(); i++){
+        for(int j = 0; j<samples[i].size(); j++){
+            if(grade.count(samples[i][j]) == 0){
+                grade[samples[i][j]] = 1;
+            }
+            else{
+                grade[samples[i][j]] += 1;
+            }
+            alls++;
+        }
+    }
+    map<int, double>::iterator it;
+    for (it = grade.begin(); it != grade.end(); it++)
+    {
+        it->second = it->second/alls;
+    }
+    return grade;
 }

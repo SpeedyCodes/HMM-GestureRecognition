@@ -35,18 +35,15 @@ public:
     bool isolatedRecognition(std::string& videoPath, std::string& gestureID);
     std::string realtimeRecognition(const std::vector<double>& frameLandmarks);
     bool
-    fitAndSelect(std::vector<std::vector<Observable> > GestureData, const std::string &gestureID, double threshold = 0.0001);
+    fitAndSelect(std::vector<std::vector<Observable> > GestureData, const std::string &gestureID, int stateAmount = 5,
+                 double threshold = 0.0001);
     const std::map<std::string, Gesture>& getGestures() const;
 
     std::string recognizeFromVideo(const char *AbsolutePath, MediapipeInterface* interface);
 
     std::pair<std::string, double> recognizeGesture(std::vector<int> &observed);
 private:
-    HMM* createThreeStateHMM(const std::map<Observable, double>& emissionMap, const std::vector<Observable>& observables);
-
-    HMM* createFourStateHMM(const std::map<Observable, double>& emissionMap, const std::vector<Observable>& observables);
-
-    HMM* createFiveStateHMM(const std::map<Observable, double>& emissionMap, const std::vector<Observable>& observables);
+    HMM* createHMM(const std::map<Observable, double>& emissionMap, const std::vector<Observable>& observables, int states);
 };
 
 

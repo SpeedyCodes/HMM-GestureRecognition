@@ -25,9 +25,9 @@ public:
 
     double likelihood(const std::vector<std::vector<Observable> >& observations) const;
 
-    bool train(const vector<Observable> &data, int iterations);
-
     bool train(const vector<vector<Observable> >&dataVector, int iterations);
+
+    bool train(const vector<vector<Observable>> &dataVector);
 
     bool autoTrain(const vector<vector<Observable> > &dataVector, double threshold = 0.00001);
 
@@ -45,6 +45,8 @@ private:
 
     double calculateDenominator(const vector<Observable> &data, vector<vector<double>> &alpha,
                                 vector<vector<double>> &beta, int t);
+
+    map<int, double> learnDistributionFromSamples(vector<vector<int>> samples);
 };
 
 

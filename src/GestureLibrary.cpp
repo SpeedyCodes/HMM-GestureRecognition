@@ -66,9 +66,6 @@ std::string GestureLibrary::realtimeRecognition(const std::vector<double>& frame
     std::vector<Observable > observables = MediapipeInterface::preprocessData(accumulatedLiveFeedData);
     // Get the highest likelihood and the name of the most probable gesture
     std::pair<std::string, double> probableGesture = recognizeGesture(observables);
-    if(probableGesture.second == 0){
-        recognizeGesture(observables);
-    }
     // Get threshold HMM
     if(thresholdHMM == nullptr){
         thresholdHMM = getThresholdHMM();
@@ -88,18 +85,25 @@ std::string GestureLibrary::realtimeRecognition(const std::vector<double>& frame
 }
 bool
 GestureLibrary::fitAndSelect(std::vector<std::vector<Observable> > GestureData, const std::string &gestureID,
+                             int stateAmount,
                              double threshold) {
+    //check if the stateAmount given is 3 or larger
+    if (stateAmount < 3){
+        cerr << "stateAmount cannot be smaller than 3" << endl;
+    }
     //check if GestureData contains at least 3 vectors
     if (GestureData.size() < 3){
         cerr << "Not enough data to fit and select a model" << endl;
         return false;
     }
-    for (auto dataVector:GestureData){
+    //check if the given data vectors aren't empty
+    for (auto& dataVector:GestureData){
         if (dataVector.empty()){
             cerr << "One of the vectors in the given data is empty" << endl;
             return false;
         }
     }
+    //check if there's a gesture with the given gesture ID
     if (gestures.find(gestureID) == gestures.end()){
         cerr << "Library does not contain gesture with ID \"" << gestureID << "\""<< endl;
         return false;
@@ -138,14 +142,16 @@ GestureLibrary::fitAndSelect(std::vector<std::vector<Observable> > GestureData, 
     }
 
     //calculate which HMM would have the highest success rate
-    double successRateThreeStateHMM = 0;
-    double successRateFourStateHMM = 0;
-    double successRateFiveStateHMM = 0;
+    vector<double> successRates;
+    for (int i = 2; i != stateAmount; i++){
+        successRates.push_back(0);
+    }
     for (int i = 1; i != 4; i++){
         //create test HMMs with their respective amount of hidden states
-        HMM* threeStateHMM = createThreeStateHMM(emissionMap,observables);
-        HMM* fourStateHMM = createFourStateHMM(emissionMap,observables);
-        HMM* fiveStateHMM = createFiveStateHMM(emissionMap,observables);
+        vector<HMM*> HMMvector;
+        for (int states = 3; states != stateAmount + 1; states++){
+            HMMvector.push_back(createHMM(emissionMap,observables,states));
+        }
 
         //split gestureData: 2/3 to train with, 1/3 to calculate likelihood
         vector<vector<Observable> > trainingVector = GestureData;
@@ -167,127 +173,72 @@ GestureLibrary::fitAndSelect(std::vector<std::vector<Observable> > GestureData, 
         trainingVector.erase(beginIt, endIt);
 
         //train and test all HMMs
-        threeStateHMM->autoTrain(trainingVector, threshold);
-        successRateThreeStateHMM += threeStateHMM->likelihood(testLikelihoodVector);
-
-        fourStateHMM->autoTrain(trainingVector, threshold);
-        successRateFourStateHMM += fourStateHMM->likelihood(testLikelihoodVector);
-
-        fiveStateHMM->autoTrain(trainingVector, threshold);
-        successRateFiveStateHMM += fiveStateHMM->likelihood(testLikelihoodVector);
+        for (int hmm = 0; hmm != stateAmount - 2; hmm++){
+            HMMvector[hmm]->autoTrain(trainingVector,threshold);
+            successRates[hmm] += HMMvector[hmm]->likelihood(testLikelihoodVector);
+        }
 
         //delete test HMMs
-        delete threeStateHMM;
-        delete fourStateHMM;
-        delete fiveStateHMM;
+        for (auto hmm:HMMvector){
+            delete hmm;
+        }
     }
-
-    double highestSuccessRate = max(max(successRateThreeStateHMM,successRateFourStateHMM),successRateFiveStateHMM);
+    double highestSuccessRate = 0;
+    int stateAmountHighestSuccess = 0;
+    for (int i = 0; i != stateAmount - 2; i++){
+        if (successRates[i] > highestSuccessRate){
+            highestSuccessRate = successRates[i];
+            stateAmountHighestSuccess = i;
+        }
+    }
+    stateAmountHighestSuccess += 3;
 
     //create and train the HMM with the highest success rate and assign it to the gesture
-    if (successRateThreeStateHMM == highestSuccessRate){
-        //create HMM with three states and train it
-        HMM* threeStateHMM = createThreeStateHMM(emissionMap,observables);
-        threeStateHMM->autoTrain(GestureData, threshold);
+    HMM* newHMM = createHMM(emissionMap,observables,stateAmountHighestSuccess);
+    newHMM->autoTrain(GestureData, threshold);
+    cout << "state amount: " << stateAmountHighestSuccess << endl;  //TODO deze feedback er uit halen?
+    cout << "success rate: " << newHMM->likelihood(GestureData) << endl;
+    gestures.at(gestureID).setHiddenMarkovModel(newHMM);
 
-        //assign selected model to the gesture
-        gestures.at(gestureID).setHiddenMarkovModel(threeStateHMM);
-    }
-    else if (successRateFourStateHMM == highestSuccessRate){
-        //create HMM with four states and train it
-        HMM* fourStateHMM = createFourStateHMM(emissionMap,observables);
-        fourStateHMM->autoTrain(GestureData, threshold);
-
-        //assign selected model to the gesture
-        gestures.at(gestureID).setHiddenMarkovModel(fourStateHMM);
-    }
-    else {
-        //create HMM with five states and train it
-        HMM* fiveStateHMM = createFiveStateHMM(emissionMap,observables);
-        fiveStateHMM->autoTrain(GestureData, threshold);
-
-        //assign selected model to the gesture
-        gestures.at(gestureID).setHiddenMarkovModel(fiveStateHMM);
-    }
     return true;
 }
 
-HMM* GestureLibrary::createThreeStateHMM(const std::map<Observable, double>& emissionMap,const std::vector<Observable>& observables) {
+HMM *GestureLibrary::createHMM(const map<Observable, double> &emissionMap, const vector<Observable> &observables, int states) {
     //create hidden states
     //initial probability of the first/"left most state" is 1, the rest is 0
     vector<hiddenState *> hiddenStates;
-    auto *hmm1o1 = new hiddenState(1, 1);
-    auto *hmm1o2 = new hiddenState(2, 0);
-    auto *hmm1o3 = new hiddenState(3, 0);
+    hiddenStates.push_back(new hiddenState(0,1));
+    for (int i = 1; i != states; i++){
+        hiddenStates.push_back(new hiddenState(i,0));
+    }
 
-    hiddenStates = {hmm1o1, hmm1o2, hmm1o3};
     //assign transitionMap to all hidden states
     //chance to transition to itself is 80%, to "the next state" is 20% and to all other states is 0%
     //the "final state" has no "next state" so it can only transition to itself, therefor the chance to transition to itself is 100%
-    hmm1o1->transitionMap = {{hmm1o1, 0.8},{hmm1o2, 0.2},{hmm1o3, 0}};
-    hmm1o2->transitionMap = {{hmm1o1, 0},{hmm1o2, 0.8},{hmm1o3, 0.2}};
-    hmm1o3->transitionMap = {{hmm1o1, 0},{hmm1o2, 0},{hmm1o3, 1}};
+    for (int i = 0; i != states-1; i++){
+        for (auto& state:hiddenStates){
+            if (hiddenStates[i] == state){
+                hiddenStates[i]->transitionMap[state] = 0.8;
+            }
+            else if (hiddenStates[i+1] == state){
+                hiddenStates[i]->transitionMap[state] = 0.2;
+            }
+            else {
+                hiddenStates[i]->transitionMap[state] = 0;
+            }
+        }
+    }
+    for (int i = 0; i != states-1; i++){
+        hiddenStates[states-1]->transitionMap[hiddenStates[i]] = 0;
+    }
+    hiddenStates[states-1]->transitionMap[hiddenStates[states-1]] = 1;
 
     //assign emissionMaps to all hidden states
     for (auto hiddenState: hiddenStates) { hiddenState->emissionMap = emissionMap; }
 
     //create HMM and train it
-    HMM* threeStateHMM = new HMM({hmm1o1, hmm1o2, hmm1o3}, observables);
-    return threeStateHMM;
-}
-
-HMM* GestureLibrary::createFourStateHMM(const std::map<Observable, double>& emissionMap, const std::vector<Observable>& observables) {
-    //create hidden states
-    //initial probability of the first/"left most state" is 1, the rest is 0
-    vector<hiddenState *> hiddenStates;
-    auto *hmm2o1 = new hiddenState(1, 1);
-    auto *hmm2o2 = new hiddenState(2, 0);
-    auto *hmm2o3 = new hiddenState(3, 0);
-    auto *hmm2o4 = new hiddenState(4, 0);
-
-    hiddenStates = {hmm2o1, hmm2o2, hmm2o3, hmm2o4};
-    //assign transitionMaps to all hidden states
-    //chance to transition to itself is 80%, to "the next state" is 20% and to all other states is 0%
-    //the "final state" has no "next state" so it can only transition to itself, therefor the chance to transition to itself is 100%
-    hmm2o1->transitionMap = {{hmm2o1, 0.8},{hmm2o2, 0.2},{hmm2o3, 0},{hmm2o4, 0}};
-    hmm2o2->transitionMap = {{hmm2o1, 0},{hmm2o2, 0.8},{hmm2o3, 0.2},{hmm2o4, 0}};
-    hmm2o3->transitionMap = {{hmm2o1, 0},{hmm2o2, 0},{hmm2o3, 0.8},{hmm2o4, 0.2}};
-    hmm2o4->transitionMap = {{hmm2o1, 0},{hmm2o2, 0}, {hmm2o3, 0},{hmm2o4, 1}};
-
-    //assign emissionMaps to all hidden states
-    for (auto hiddenState: hiddenStates) { hiddenState->emissionMap = emissionMap; }
-
-    //create HMM and train it
-    HMM* fourStateHMM = new HMM({hmm2o1, hmm2o2, hmm2o3, hmm2o4}, observables);
-    return fourStateHMM;
-}
-
-HMM* GestureLibrary::createFiveStateHMM(const std::map<Observable, double>& emissionMap, const std::vector<Observable>& observables) {
-    //create hidden states
-    //initial probability of the first/"left most state" is 1, the rest is 0
-    vector<hiddenState *> hiddenStates;
-    auto *hmm3o1 = new hiddenState(1, 1);
-    auto *hmm3o2 = new hiddenState(2, 0);
-    auto *hmm3o3 = new hiddenState(3, 0);
-    auto *hmm3o4 = new hiddenState(4, 0);
-    auto *hmm3o5 = new hiddenState(5, 0);
-
-    hiddenStates = {hmm3o1, hmm3o2, hmm3o3, hmm3o4, hmm3o5};
-    //assign transitionMaps to all hidden states
-    //chance to transition to itself is 80%, to "the next state" is 20% and to all other states is 0%
-    //the "final state" has no "next state" so it can only transition to itself, therefor the chance to transition to itself is 100%
-    hmm3o1->transitionMap = {{hmm3o1, 0.8},{hmm3o2, 0.2},{hmm3o3, 0},{hmm3o4, 0},{hmm3o5, 0}};
-    hmm3o2->transitionMap = {{hmm3o1, 0},{hmm3o2, 0.8},{hmm3o3, 0.2},{hmm3o4, 0},{hmm3o5, 0}};
-    hmm3o3->transitionMap = {{hmm3o1, 0},{hmm3o2, 0},{hmm3o3, 0.8},{hmm3o4, 0.2},{hmm3o5, 0}};
-    hmm3o4->transitionMap = {{hmm3o1, 0},{hmm3o2, 0},{hmm3o3, 0},{hmm3o4, 0.8},{hmm3o5, 0.2}};
-    hmm3o5->transitionMap = {{hmm3o1, 0},{hmm3o2, 0},{hmm3o3, 0},{hmm3o4, 0},{hmm3o5, 1}};
-
-    //assign emissionMaps to all hidden states
-    for (auto hiddenState: hiddenStates) { hiddenState->emissionMap = emissionMap; }
-
-    //create HMM and train it
-    HMM* fiveStateHMM = new HMM({hmm3o1, hmm3o2, hmm3o3, hmm3o4, hmm3o5}, observables);
-    return fiveStateHMM;
+    HMM* nStateHMM = new HMM(hiddenStates, observables);
+    return nStateHMM;
 }
 
 bool GestureLibrary::addGesture(string &gestureID) {
@@ -364,10 +315,10 @@ void GestureLibrary::readIn(const string &path) {
     }
 }
 
+
 const std::map<std::string, Gesture> &GestureLibrary::getGestures() const {
     return gestures;
 }
-
 
 std::string GestureLibrary::recognizeFromVideo(const char* AbsolutePath, MediapipeInterface* interface){
     std::vector<std::vector<double>> landmarks = interface->getLandmarksFromVideo(AbsolutePath);

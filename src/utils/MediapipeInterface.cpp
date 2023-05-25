@@ -161,20 +161,28 @@ std::vector<int> MediapipeInterface::preprocessData(const std::vector<std::vecto
     std::vector<double> previousFrameData;
     bool firstFrame = true;
     for(const std::vector<double>& frameData: data){
+        if(frameData.empty()) {
+            std::cerr << "Frame data is empty" <<std::endl;
+            continue;
+        }
         if(firstFrame){
             previousFrameData = frameData;
             firstFrame = false;
         }else{
             double angle; // We use angle as the feature
-            if(frameData[0] - previousFrameData[0] != 0){
-                // Use arctan
-                angle = atan((frameData[1] - previousFrameData[1])/(frameData[0] - previousFrameData[0]));
-            }else if(frameData[1] - previousFrameData[1] > 0){
-                angle = M_PI/2;
-            }else if(frameData[1] - previousFrameData[1] < 0){
-                angle = -M_PI/2;
-            }else{ // 0/0 => 0
-                angle = 0;
+            double x = frameData[0] - previousFrameData[0];
+            double y = frameData[1] - previousFrameData[1];
+            if (x == 0)
+            {
+                if (y > 0) angle = M_PI / 2;
+                angle = -M_PI / 2;
+            }
+            else if (x < 0)
+            {
+                angle = atan(y / x) + M_PI;
+            }
+            else{
+                angle = atan(y / x);
             }
             // TODO: special number for absent observations + remove end trash?
             angle = angle * 180.0 / M_PI; // Set to degrees

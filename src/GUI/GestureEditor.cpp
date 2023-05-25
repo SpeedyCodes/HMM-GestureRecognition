@@ -47,7 +47,7 @@ void GestureEditor::on_trainButton_clicked()
     ui->statusLabel->setText(ui->statusLabel->text() + "Fitting HMM\n");
     std::string gestureID = ui->nameLineEdit->text().toStdString();
     library->addGesture(gestureID);
-    bool success = library->fitAndSelect(observables, gestureID);
+    bool success = library->fitAndSelect(observables, gestureID); //TODO stateAmount staat nu standaard op 10, mogelijks aanpassen
     ui->progressBar->setValue(100);
     ui->statusLabel->setText(ui->statusLabel->text() + "HMM fitted\n");
     if(success) close(); // return to the mainwindow if there are no errors to show
