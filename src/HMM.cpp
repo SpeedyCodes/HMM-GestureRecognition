@@ -43,14 +43,14 @@ HMM::HMM(const string &saveFilePath, bool &success){
     for(auto& hiddenStateData : data["hiddenStates"]){
         int id = hiddenStateData["id"].get<int>();
         hiddenState *hiddenstate = hiddenStates[id];
-        hiddenstate->initialChance = logProbability(hiddenStateData["initialProbability"].get<double>());
+        hiddenstate->initialChance = logProbability::fromRegularProbability(hiddenStateData["initialProbability"].get<double>());
         for (auto& transitionData: hiddenStateData["transitions"]) {
             hiddenstate->transitionMap.insert({hiddenStates.at(transitionData["id"].get<int>()),
-                                               logProbability(transitionData["probability"].get<double>())});
+                                               logProbability::fromRegularProbability(transitionData["probability"].get<double>())});
         }
         for (auto& emissionData: hiddenStateData["emissions"]) {
             hiddenstate->emissionMap.insert({emissionData["id"].get<int>(),
-                                             logProbability(emissionData["probability"].get<double>())});
+                                             logProbability::fromRegularProbability(emissionData["probability"].get<double>())});
         }
     }
     for(auto& state: hiddenStates) {
@@ -318,13 +318,13 @@ void HMM::HMMtoJson(string &file){
     for(int i = 0; i<this->hiddenStates.size(); i++){
         nlohmann::json j2;
         j2["id"] = this->hiddenStates[i]->id;
-        j2["initialProbability"] = this->hiddenStates[i]->initialChance.getValueAsIs();
+        j2["initialProbability"] = this->hiddenStates[i]->initialChance.toRegularProbability();
         std::vector<nlohmann::json>transitions;
         map<hiddenState*, logProbability>::iterator it;
         for (it = this->hiddenStates[i]->transitionMap.begin(); it != this->hiddenStates[i]->transitionMap.end(); it++){
             nlohmann::json j3;
             j3["id"] = it->first->id;
-            j3["probability"] = it->second.getValueAsIs();
+            j3["probability"] = it->second.toRegularProbability();
             transitions.push_back(j3);
         }
         j2["transitions"] = transitions;
@@ -334,7 +334,7 @@ void HMM::HMMtoJson(string &file){
         for(it2 = this->hiddenStates[i]->emissionMap.begin(); it2 != this->hiddenStates[i]->emissionMap.end(); it2++){
             nlohmann::json j4;
             j4["id"] = it2->first;
-            j4["probability"] = it2->second.getValueAsIs();
+            j4["probability"] = it2->second.toRegularProbability();
             emissions.push_back(j4);
         }
         j2["emissions"] = emissions;

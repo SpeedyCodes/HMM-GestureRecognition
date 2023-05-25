@@ -76,7 +76,7 @@ std::string GestureLibrary::realtimeRecognition(const std::vector<double>& frame
     // Remove the first element of the accumulated live feed
     accumulatedLiveFeedData.erase(accumulatedLiveFeedData.begin());
     // Compare the gesture likelihood to threshold
-    if(probableGesture.second > threshold) return probableGesture;
+    if(probableGesture.second > threshold) return probableGesture.first;
     else return "";
 }
 bool
