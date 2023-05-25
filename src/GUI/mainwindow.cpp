@@ -82,12 +82,12 @@ void MainWindow::on_cameraToggle_clicked()
         QObject::connect(&mediaPipeInterface, &MediapipeInterface::imageAvailable,
                          this, &MainWindow::paintRealtimeFrame);
         QObject::connect(&mediaPipeInterface, &MediapipeInterface::dataAvailable,
-                         library, &GestureLibrary::realtimeRecognition);
+                         this, &MainWindow::tryRealtimeRecognition);
     }else{
         QObject::disconnect(&mediaPipeInterface, &MediapipeInterface::imageAvailable,
                          this, &MainWindow::paintRealtimeFrame);
         QObject::disconnect(&mediaPipeInterface, &MediapipeInterface::dataAvailable,
-                     library, &GestureLibrary::realtimeRecognition);
+                            this, &MainWindow::tryRealtimeRecognition);
         QImage black;
         black.fill(Qt::black);
         paintRealtimeFrame(black);
@@ -123,5 +123,36 @@ void MainWindow::on_actionLoad_Gesture_Library_triggered()
                                  tr("Gesture Libraries (*.gesturelibrary)"));
     library->readIn(path.toStdString());
     refreshGesturesView();
+}
+
+
+void MainWindow::on_videoPickButton_clicked()
+{
+    videoInputPath = QFileDialog::getOpenFileName(this, tr("Select video to recognize gestures in"),
+                                                       QStandardPaths::writableLocation(QStandardPaths::MoviesLocation),
+                                                       tr("Video Files (*.mp4 *.avi *.mov)"));
+    if (videoInputPath != ""){
+        ui->selectedVideoLabel->setText(videoInputPath);
+    }
+}
+
+
+void MainWindow::on_recognizeButton_clicked()
+{
+    std::string str = videoInputPath.toStdString();
+    const char* p = str.c_str();
+    string result = library->recognizeFromVideo(p, &mediaPipeInterface);
+    handleGestureRecognized(result);
+}
+
+void MainWindow::handleGestureRecognized(std::string &gestureID) {
+    ui->recognizedListWidget->addItem(QString::fromStdString(gestureID));
+}
+
+void MainWindow::tryRealtimeRecognition(const std::vector<double> &landmarks) {
+    std::string gesture = library->realtimeRecognition(landmarks);
+    if(!gesture.empty()){
+        handleGestureRecognized(gesture);
+    }
 }
 

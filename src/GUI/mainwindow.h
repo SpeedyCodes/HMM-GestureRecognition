@@ -38,14 +38,22 @@ private slots:
 
     void on_actionLoad_Gesture_Library_triggered();
 
+    void on_videoPickButton_clicked();
+
+    void on_recognizeButton_clicked();
+
+    void tryRealtimeRecognition(const std::vector<double> &landmarks);
+
 private:
     Ui::MainWindow *ui;
     SignLanguageWriter* signLanguageWriter;
     RobotConnectionManager* robotConnectionManager;
     MediapipeInterface mediaPipeInterface;
     GestureLibrary* library; // TODO: vector of pointers to GestureLibraries?
+    QString videoInputPath;
     
     void refreshGesturesView();
+    void handleGestureRecognized(std::string &gestureID);
 };
 
 #endif // MAINWINDOW_H

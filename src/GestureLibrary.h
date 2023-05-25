@@ -15,10 +15,11 @@ class HMM;
 class GestureLibrary: public QObject {
 private:
     std::map<std::string, Gesture> gestures;
-    std::map <int, std::vector<Observable > > possibleObservables; // Channel number (from 0), ids of possible observables
+    std::map <int, std::vector<Observable > > possibleObservables = {{0, {0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18}}}; //TODO remove hardcoded Channel number (from 0), ids of possible observables
     std::vector<std::vector<double> > accumulatedLiveFeedData;
     std::string directory;
     std::string name;
+    HMM* thresholdHMM = nullptr;
 public:
     explicit GestureLibrary(){};
     explicit GestureLibrary(std::string& path);
@@ -31,7 +32,6 @@ public:
     void updateSavedGestures() const;
     bool isFileSystemInitiated() const;
     bool modelTrainingAndSelection(std::vector<std::vector<Observable>>& observed, std::string gestureID);
-    std::string recognizeGesture(std::vector<Observable>& observed, double& likelihood) const { return "";};
     bool isolatedRecognition(std::string& videoPath, std::string& gestureID);
     std::string realtimeRecognition(const std::vector<double>& frameLandmarks);
     bool
