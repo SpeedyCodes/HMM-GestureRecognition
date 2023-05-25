@@ -41,9 +41,11 @@ private:
     vector<vector<logProbability>> calculateAlpha(const vector<Observable>& data);
 
     vector<vector<logProbability>> calculateBeta(const vector<Observable>& data);
-
+  
     logProbability calculateDenominator(const vector<Observable> &data, vector<vector<logProbability>> &alpha,
                                         vector<vector<logProbability>> &beta, int t);
+
+    map<int, double> learnDistributionFromSamples(vector<vector<int>> samples);
 };
 
 
