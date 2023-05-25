@@ -2,21 +2,21 @@
   "hiddenStates": [
       {
         "id": 7,
-        "initialProbability": 1.00,
+        "initialProbability": 0,
         "transitions": [
           {
             "id": 7,
-            "probability": 1.00
+            "probability": 0
           }
         ],
         "emissions": [
           {
             "id": 5,
-            "probability": 0.1
+            "probability": -2.3025850929940456
           },
           {
             "id": 10,
-            "probability": 0.9
+            "probability": -0.1053605156578263
           }
         ]
       }
