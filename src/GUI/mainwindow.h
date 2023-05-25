@@ -44,16 +44,18 @@ private slots:
 
     void tryRealtimeRecognition(const std::vector<double> &landmarks);
 
+    void applicationWindowClosed();
+
 private:
     Ui::MainWindow *ui;
-    SignLanguageWriter* signLanguageWriter;
-    RobotConnectionManager* robotConnectionManager;
+    ApplicationExampleWindow* application;
     MediapipeInterface mediaPipeInterface;
     GestureLibrary* library; // TODO: vector of pointers to GestureLibraries?
     QString videoInputPath;
     
     void refreshGesturesView();
     void handleGestureRecognized(std::string &gestureID);
+    void initApplicationWindow(ApplicationExampleWindow *window);
 };
 
 #endif // MAINWINDOW_H

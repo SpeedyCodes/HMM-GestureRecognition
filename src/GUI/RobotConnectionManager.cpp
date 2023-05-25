@@ -2,8 +2,7 @@
 #include "RobotConnectionManager.h"
 #include "ui_RobotConnectionManager.h"
 
-RobotConnectionManager::RobotConnectionManager(QWidget *parent) :
-    QMainWindow(parent),
+RobotConnectionManager::RobotConnectionManager(QWidget *parent) : ApplicationExampleWindow(parent),
     ui(new Ui::RobotConnectionManager)
 {
     ui->setupUi(this);
@@ -50,5 +49,31 @@ void RobotConnectionManager::onConnectionTestSuccess() {
     QMessageBox msgBox;
     msgBox.setText("The robot responded: the connection is active.");
     msgBox.exec();
+}
+
+void RobotConnectionManager::handleGestureRecognized(string &gestureID) {
+    int index = std::distance(gestureNames.begin(), std::find(std::begin(gestureNames), std::end(gestureNames), gestureID));
+    switch (index) {
+        case 0:{
+            controller->forward();
+            break;
+        }
+        case 1:{
+            controller->backward();
+            break;
+        }
+        case 2:{
+            controller->left();
+            break;
+        }
+        case 3:{
+            controller->right();
+            break;
+        }
+        case 4:{
+            controller->stop();
+            break;
+        }
+    }
 }
 
