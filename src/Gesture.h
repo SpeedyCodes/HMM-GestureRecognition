@@ -25,13 +25,6 @@ public:
 
     Gesture(const string &gestureId, HMM *hiddenMarkovModel);
 
-/**
- * Constructor to load a gesture from a JSON file.
- * @param saveFilePath The path to the JSON file
- * @param success Will contain true if the Gesture object was constructed correctly. False can indicate a missing or incorrect file.
- */
-    Gesture(const string &saveFilePath, bool &success);
-
     const string &getId() const;
 
     HMM *getHiddenMarkovModel() const;

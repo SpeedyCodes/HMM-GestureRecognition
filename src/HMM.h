@@ -4,6 +4,7 @@
 #include <iostream>
 #include <vector>
 #include "src/HMMcomponents/hiddenState.h"
+#include "HMMcomponents/logProbability.h"
 
 class HMM {
 vector<hiddenState*> hiddenStates;
@@ -19,9 +20,9 @@ public:
 
     bool checkValues();
 
-    double likelihood(std::vector<Observable>& observations);
+    logProbability likelihood(std::vector<Observable>& observations);
 
-    double likelihood(std::vector<std::vector<Observable> > observations);
+    logProbability likelihood(std::vector<std::vector<Observable> > observations);
 
     bool train(const vector<vector<Observable> >&dataVector, int iterations);
 
@@ -37,12 +38,12 @@ public:
 
 private:
 
-    vector<vector<double>> calculateAlpha(const vector<Observable>& data);
+    vector<vector<logProbability>> calculateAlpha(const vector<Observable>& data);
 
-    vector<vector<double>> calculateBeta(const vector<Observable>& data);
-
-    double calculateDenominator(const vector<Observable> &data, vector<vector<double>> &alpha,
-                                vector<vector<double>> &beta, int t);
+    vector<vector<logProbability>> calculateBeta(const vector<Observable>& data);
+  
+    logProbability calculateDenominator(const vector<Observable> &data, vector<vector<logProbability>> &alpha,
+                                        vector<vector<logProbability>> &beta, int t);
 
     map<int, double> learnDistributionFromSamples(vector<vector<int>> samples);
 };
