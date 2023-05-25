@@ -8,6 +8,7 @@
 
 #include <QTcpSocket>
 #include "QObject"
+#include <QHostAddress>
 
 using namespace std;
 

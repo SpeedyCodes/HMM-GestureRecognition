@@ -24,3 +24,5 @@ bool hiddenState::isValid() {
     }
     return true;
 }
+
+hiddenState::hiddenState(const hiddenState& other):id(other.id), transitionMap(other.transitionMap), emissionMap(other.emissionMap), initialChance(other.initialChance){};

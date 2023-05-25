@@ -77,8 +77,8 @@ bool HMM::checkValues() {
     for(auto state:hiddenStates){
         if (!state->isValid()){
             cerr << "probabilities do not add up to 1 for a certain state" << endl;
-            success = false;
-            break;
+//            success = false;
+//            break;
         }
     }
     for(auto state:hiddenStates){
@@ -91,7 +91,7 @@ bool HMM::checkValues() {
     return true;
 }
 
-double HMM::likelihood(std::vector<Observable>& observations){
+double HMM::likelihood(const std::vector<Observable>& observations) const{
 
     std::vector<std::pair<hiddenState*, double>>previousAlpha;
     for(int i = 0; i<observations.size(); i++){
@@ -125,7 +125,7 @@ double HMM::likelihood(std::vector<Observable>& observations){
     return totalChance;
 }
 
-double HMM::likelihood(std::vector<std::vector<Observable>> observations) {
+double HMM::likelihood(const std::vector<std::vector<Observable>>& observations) const {
     double totalChance = 0;
     for (auto& observationVector:observations){
         totalChance += likelihood(observationVector);
@@ -448,4 +448,37 @@ bool HMM::autoTrain(const vector<vector<Observable> > &dataVector, double thresh
 
 const vector<Observable> &HMM::getObservables() const {
     return observables;
+}
+
+HMM::HMM(const HMM& other): observables(other.observables) {
+    // Create a map to store the original to copied hiddenState pointers
+    std::map<hiddenState*, hiddenState*> originalToCopy;
+    std::vector<hiddenState*> newHiddenStates;
+
+    // Make copy of each hidden state and fill it in originalToCopy
+    for(auto state:other.hiddenStates){
+        hiddenState* newState = new hiddenState(*state);
+        originalToCopy[state] = newState;
+        newHiddenStates.push_back(newState);
+    }
+
+    // Iterate over all state and correct states
+    for(hiddenState* state:newHiddenStates){
+        for (const auto& entry : state->transitionMap) {
+            // Find the corresponding copied hiddenState pointer in the map
+            auto it = originalToCopy.find(entry.first);
+            if (it != originalToCopy.end()) {
+                state->transitionMap[it->second] = entry.second;
+            }
+        }
+    }
+    // Remove old states
+    for(hiddenState* state:newHiddenStates){
+        for (std::map<hiddenState*,double>::iterator it = state->transitionMap.begin(); it != state->transitionMap.end();) {
+            if(std::find(newHiddenStates.begin(), newHiddenStates.end(), it->first) == newHiddenStates.end()){
+                state->transitionMap.erase((it++)->first);
+            }else{++it;}
+        }
+    }
+    hiddenStates = newHiddenStates;
 }

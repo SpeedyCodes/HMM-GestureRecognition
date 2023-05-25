@@ -22,7 +22,8 @@ HMM* GestureLibrary::getThresholdHMM() const{
     for(std::pair<std::string, Gesture> gesturePair: gestures){
         Gesture gesture = gesturePair.second; // Get gesture
         HMM* gestureHMM = gesture.getHiddenMarkovModel();
-        std::vector<hiddenState*> gestureStates = gestureHMM->getHiddenStates();
+        HMM* gestureCopy = new HMM(*gestureHMM);
+        std::vector<hiddenState*> gestureStates = gestureCopy->getHiddenStates();
         int numberOfStates = gestureStates.size();
         // Traverse all states of the gesture
         for(hiddenState* &state: gestureStates){
@@ -58,22 +59,31 @@ HMM* GestureLibrary::getThresholdHMM() const{
     return thresholdHMM;
 }
 std::string GestureLibrary::realtimeRecognition(const std::vector<double>& frameLandmarks){
+    if(gestures.empty()) std::cerr << "You can't do realtime recognition without gestures in library" <<std::endl;
     accumulatedLiveFeedData.push_back(frameLandmarks);
-    if(accumulatedLiveFeedData.size() < 5) return "";  // TODO: remove hardcoded sliding window size or find the best value experimentally
+    if(accumulatedLiveFeedData.size() < 20) return "";  // TODO: remove hardcoded sliding window size or find the best value experimentally
     // Preprocess data
     std::vector<Observable > observables = MediapipeInterface::preprocessData(accumulatedLiveFeedData);
     // Get the highest likelihood and the name of the most probable gesture
     std::pair<std::string, double> probableGesture = recognizeGesture(observables);
+    if(probableGesture.second == 0){
+        recognizeGesture(observables);
+    }
     // Get threshold HMM
     if(thresholdHMM == nullptr){
         thresholdHMM = getThresholdHMM();
     }
     // Calculate the likelihood of the threshold HMM
     double threshold = thresholdHMM->likelihood(observables);
+    std::cout << "Threshold = " << threshold <<std::endl;
+    std::cout << "Possible gesture " << probableGesture.first << " with " << probableGesture.second << std::endl;
     // Remove the first element of the accumulated live feed
     accumulatedLiveFeedData.erase(accumulatedLiveFeedData.begin());
     // Compare the gesture likelihood to threshold
-    if(probableGesture.second > threshold) return probableGesture;
+    if(probableGesture.second > threshold) {
+        accumulatedLiveFeedData.clear();
+        return probableGesture.first;
+    }
     else return "";
 }
 bool
