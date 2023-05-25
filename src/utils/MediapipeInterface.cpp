@@ -43,10 +43,9 @@ void MediapipeInterface::onDataReady()
         image.loadFromData(data);
         emit(imageAvailable(image));
     }else{
-        bool ok;
-        //TODO read data as whatever we need: int/double, array of int/double?
-        std::vector<double> result;
-        emit(dataAvailable(result));
+        double* x = (double*)data.data();
+        double* y = x + 1;
+        emit(dataAvailable({*x, *y}));
     }
 }
 
@@ -57,7 +56,7 @@ bool MediapipeInterface::open() {
     connect(&dataServer, &QTcpServer::newConnection, this, &MediapipeInterface::acceptConnection);
     dataServer.listen(QHostAddress::Any, 5001);
     pythonClients = new QProcess;
-    pythonClients->start("python", {"src/utils/run_tcp.py"});
+    pythonClients->start("python", {"src/utils/run_tcp.py"}); // TODO what to do with systems on which the command is python3?
     isOpened = true;
     return isOpened;
 }
@@ -199,7 +198,7 @@ std::vector<std::vector<int>> MediapipeInterface::preprocessData(const std::vect
     std::vector<std::vector<int>> to_return;
     for(const std::vector<std::vector<double>>& singleVector: data){
         std::vector<int> to_add = preprocessData(singleVector);
-        to_return.push_back(to_add);
+        if(!to_add.empty()) to_return.push_back(to_add);
     }
     return to_return;
 }
