@@ -60,7 +60,7 @@ HMM::HMM(const string &saveFilePath, bool &success){
     success = checkValues();
 }
 
-bool HMM::checkValues() {
+bool HMM::checkValues() const{
     bool success = true;
     logProbability sumInitialChances = logProbability::fromRegularProbability(0);
     for(auto state:hiddenStates){
@@ -91,7 +91,7 @@ bool HMM::checkValues() {
     return true;
 }
 
-logProbability HMM::likelihood(std::vector<Observable>& observations){
+logProbability HMM::likelihood(const vector<Observable> &observations) const{
 
     std::vector<std::pair<hiddenState*, logProbability>>previousAlpha;
     for(int i = 0; i<observations.size(); i++){
@@ -125,9 +125,9 @@ logProbability HMM::likelihood(std::vector<Observable>& observations){
     return totalChance;
 }
 
-logProbability HMM::likelihood(std::vector<std::vector<Observable>> observations) {
+logProbability HMM::likelihood(const vector<vector<Observable>> &observations) const{
     logProbability totalChance = logProbability::fromRegularProbability(0);
-    for (auto& observationVector:observations){
+    for (const auto& observationVector:observations){
         totalChance += likelihood(observationVector);
     }
     totalChance /= observations.size();
@@ -142,7 +142,7 @@ bool HMM::train(const vector<vector<Observable>> &dataVector){
     std::vector<std::vector<logProbability>> vector_denominator;
     int M = hiddenStates.size();
     // First loop: get xi, gamma, sumXi2 and sumGamma1 for each vector of observables
-    for (auto data: dataVector) {
+    for (const auto& data: dataVector) {
         if (data.empty()) {
             cerr << "No data was given to train with" << endl;
             return false;
@@ -303,15 +303,7 @@ bool HMM::train(const vector<vector<Observable>> &dataVector){
     return checkValues();
 }
 
-bool HMM::train(const vector<vector<Observable>> &dataVector, int iterations) {
-    bool success = true;
-    for(int i = 0; i != iterations; i++){
-        success = success && train(dataVector);
-    }
-    return success;
-}
-
-void HMM::HMMtoJson(string &file){
+void HMM::HMMtoJson(const string &file) const{
     nlohmann::json j;
     nlohmann::json j1;
     std::vector<nlohmann::json>hiddenStates;
@@ -432,7 +424,7 @@ logProbability HMM::calculateDenominator(const vector<Observable>& data, vector<
     return denominator;
 }
 
-void HMM::print() {
+void HMM::print() const{
     cout << "transition probabilities:" << endl;
     for (const auto& state:hiddenStates) {
         for(const auto& pair:state->transitionMap){
@@ -502,8 +494,8 @@ const vector<Observable> &HMM::getObservables() const {
     return observables;
 }
 
-std::map<int, double>HMM::learnDistributionFromSamples(std::vector<std::vector<int>>samples){
-    std::map<int, double> grade;
+std::map<Observable, double>HMM::learnDistributionFromSamples(std::vector<std::vector<Observable>>samples){
+    std::map<Observable, double> grade;
     int alls = 0;
     for(int i = 0; i<samples.size(); i++){
         for(int j = 0; j<samples[i].size(); j++){

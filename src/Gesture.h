@@ -1,18 +1,18 @@
 #ifndef HMM_GESTURERECOGNITION_GESTURE_H
 #define HMM_GESTURERECOGNITION_GESTURE_H
 
-/**
- * This class serves as a sort of wrapper for the HMM class when using it to detect gestures.
- * It keeps some gesture-related data and provides some convenience-methods.
- * A Gesture does expose its underlying HMM though.
- */
-
 #include <string>
 #include "json.hpp"
 
 using namespace std;
 
 class HMM;
+
+/**
+ * This class serves as a sort of wrapper for the HMM class when using it to detect gestures.
+ * It keeps some gesture-related data and provides some convenience-methods.
+ * A Gesture does expose its underlying HMM though.
+ */
 
 class Gesture {
 public:
@@ -25,9 +25,24 @@ public:
 
     Gesture(const string &gestureId, HMM *hiddenMarkovModel);
 
+/**
+ * Gets the ID of the gesture.
+ * @return A reference to the ID.
+ */
     const string &getId() const;
 
+/**
+ * Gets the Hidden Markov Model associated with the gesture.
+ * @return A pointer to the Hidden Markov Model.
+ */
+
     HMM *getHiddenMarkovModel() const;
+
+/**
+ * Sets the Hidden Markov Model associated with the gesture.
+ * Useful when the HMM has not been trained yet when constructing the gesture.
+ * @param hiddenMarkovModel A pointer to the Hidden Markov Model.
+ */
 
     void setHiddenMarkovModel(HMM *hiddenMarkovModel);
 /**
