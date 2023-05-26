@@ -19,6 +19,7 @@ private:
     std::vector<std::vector<double> > accumulatedLiveFeedData;
     std::string directory;
     std::string name;
+    unsigned int counterOfEmptiness = 0;
     HMM* thresholdHMM = nullptr;
 public:
     explicit GestureLibrary(){};

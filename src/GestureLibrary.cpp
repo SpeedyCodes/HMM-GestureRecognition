@@ -59,29 +59,50 @@ HMM* GestureLibrary::getThresholdHMM() const{
     return thresholdHMM;
 }
 std::string GestureLibrary::realtimeRecognition(const std::vector<double>& frameLandmarks){
-    if(gestures.empty()) std::cerr << "You can't do realtime recognition without gestures in library" <<std::endl;
-    accumulatedLiveFeedData.push_back(frameLandmarks);
-    if(accumulatedLiveFeedData.size() < 20) return "";  // TODO: remove hardcoded sliding window size or find the best value experimentally
-    // Preprocess data
-    std::vector<Observable > observables = MediapipeInterface::preprocessData(accumulatedLiveFeedData);
-    // Get the highest likelihood and the name of the most probable gesture
-    std::pair<std::string, double> probableGesture = recognizeGesture(observables);
-    // Get threshold HMM
-    if(thresholdHMM == nullptr){
-        thresholdHMM = getThresholdHMM();
+    if(gestures.empty()) {
+        std::cerr << "You can't do realtime recognition without gestures in library" <<std::endl;
+        return "";
     }
-    // Calculate the likelihood of the threshold HMM
-    double threshold = thresholdHMM->likelihood(observables);
-    std::cout << "Threshold = " << threshold <<std::endl;
-    std::cout << "Possible gesture " << probableGesture.first << " with " << probableGesture.second << std::endl;
-    // Remove the first element of the accumulated live feed
-    accumulatedLiveFeedData.erase(accumulatedLiveFeedData.begin());
-    // Compare the gesture likelihood to threshold
-    if(probableGesture.second > threshold) {
+    if(frameLandmarks.empty()) {
+        std::cerr << "Empty landmark in realtime recognition!" <<std::endl;
+        return "";
+    }
+    if(frameLandmarks[0] != -1 || frameLandmarks[1] != -1){ // The hand is not detected
+        accumulatedLiveFeedData.push_back(frameLandmarks);
+        counterOfEmptiness = 0;
+    }else {
+        counterOfEmptiness++;
+    }
+    if(counterOfEmptiness > 10){
+        if(accumulatedLiveFeedData.size() < 15) { // TODO: remove hardcoded sliding window size or find the best value experimentally
+            accumulatedLiveFeedData.clear(); // Remove garbage
+            return "";
+        }
+        std::cout << accumulatedLiveFeedData.size() << std::endl;
+        // More magic!
+        for(int i = 0; i != 5; i++) accumulatedLiveFeedData.erase(accumulatedLiveFeedData.begin());
+        for(int i = 0; i != 5; i++) accumulatedLiveFeedData.pop_back();
+        // Preprocess data
+        std::vector<Observable > observables = MediapipeInterface::preprocessData(accumulatedLiveFeedData);
+        // Get the highest likelihood and the name of the most probable gesture
+        std::pair<std::string, double> probableGesture = recognizeGesture(observables);
+        // Get threshold HMM
+        if(thresholdHMM == nullptr){
+            thresholdHMM = getThresholdHMM();
+        }
+        // Calculate the likelihood of the threshold HMM
+        double threshold = thresholdHMM->likelihood(observables);
+//        std::cout << "Threshold = " << threshold <<std::endl;
+//        std::cout << "Possible gesture " << probableGesture.first << " with " << probableGesture.second << std::endl;
+        // Remove the first element of the accumulated live feed
+//        accumulatedLiveFeedData.erase(accumulatedLiveFeedData.begin());
         accumulatedLiveFeedData.clear();
-        return probableGesture.first;
-    }
-    else return "";
+        // Compare the gesture likelihood to threshold
+        if(probableGesture.second > threshold) {
+            return probableGesture.first;
+        }
+        else return "";
+    }else return "";
 }
 bool
 GestureLibrary::fitAndSelect(std::vector<std::vector<Observable> > GestureData, const std::string &gestureID,

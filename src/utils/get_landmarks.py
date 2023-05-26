@@ -96,6 +96,33 @@ def extract_keypoints(results):
     #     # lh,
     #     rh])
 
+def extract_realtime_keypoints(results):
+    # TODO: save everything?...
+
+    # pose = np.array([[res.x, res.y, res.z, res.visibility] for res in
+    #                  results.pose_landmarks.landmark]).flatten() if results.pose_landmarks else np.zeros(33 * 4)
+    # face = np.array([[res.x, res.y, res.z] for res in
+    #                  results.face_landmarks.landmark]).flatten() if results.face_landmarks else np.zeros(468 * 3)
+    # lh = np.array([[res.x, res.y, res.z] for res in
+    #                results.left_hand_landmarks.landmark]).flatten() if results.left_hand_landmarks else np.zeros(21 * 3)
+    # rh = np.array([[res.x, res.y, res.z] for res in
+    #                results.right_hand_landmarks.landmark]).flatten() if results.right_hand_landmarks else np.zeros(
+    #     21 * 3)
+    # try:
+    if results is None: return [-1, -1]
+    if results.right_hand_landmarks:
+        for res in results.right_hand_landmarks.landmark:
+            rh = [res.x, res.y]
+    else:
+        rh = [-1, -1]
+    # except:
+    #     rh = [0,0]
+    return rh
+# return np.concatenate([# pose,
+#     # face,
+#     # lh,
+#     rh])
+
 def get_landmarks_from_video(video_path):
     """
     Collects landmarks from the given video that previously was flipped (per frame)

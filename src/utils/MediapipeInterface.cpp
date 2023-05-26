@@ -166,30 +166,36 @@ std::vector<int> MediapipeInterface::preprocessData(const std::vector<std::vecto
             continue;
         }
         if(firstFrame){
+            if(frameData[0] == -1 and frameData[1] == -1) continue; // For realime recognition
             previousFrameData = frameData;
             firstFrame = false;
         }else{
             double angle; // We use angle as the feature
-            double x = frameData[0] - previousFrameData[0];
-            double y = frameData[1] - previousFrameData[1];
-            if (x == 0)
-            {
-                if (y > 0) angle = M_PI / 2;
-                angle = -M_PI / 2;
+            if(frameData[0] != -1 or frameData[1] != -1){
+                double x = frameData[0] - previousFrameData[0];
+                double y = frameData[1] - previousFrameData[1];
+                if (x == 0)
+                {
+                    if (y > 0) angle = M_PI / 2;
+                    angle = -M_PI / 2;
+                }
+                else if (x < 0)
+                {
+                    angle = atan(y / x) + M_PI;
+                }
+                else{
+                    angle = atan(y / x);
+                }
+                // TODO: special number for absent observations + remove end trash?
+                angle = angle * 180.0 / M_PI; // Set to degrees
+                if(angle < 0) angle += 360;
+                angle /= magicNumber;
+                previousFrameData = frameData;
+            }else{ // Realtime recognition, the hand is not in the frame
+                angle = -1;
+                previousFrameData = {0,0};
             }
-            else if (x < 0)
-            {
-                angle = atan(y / x) + M_PI;
-            }
-            else{
-                angle = atan(y / x);
-            }
-            // TODO: special number for absent observations + remove end trash?
-            angle = angle * 180.0 / M_PI; // Set to degrees
-            if(angle < 0) angle += 360;
-            angle /= magicNumber;
             to_return.push_back(static_cast<int>(std::round(angle)));
-            previousFrameData = frameData;
         }
     }
     return to_return;
