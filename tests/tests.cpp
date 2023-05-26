@@ -178,12 +178,12 @@ bool testBaumWelch1(){
     corpus.insert(corpus.end(), corpus2.begin(), corpus2.end());
 
     // Set first HMM
-    hiddenState* s = new hiddenState(1, 0.85);
-    hiddenState* t= new hiddenState(2, 0.15);
-    s->emissionMap = {{0,0.4}, {1,0.6}};
-    t->emissionMap = {{0,0.5}, {1,0.5}};
-    s->transitionMap = {{s, 0.3}, {t, 0.7}};
-    t->transitionMap = {{s, 0.1}, {t, 0.9}};
+    hiddenState* s = new hiddenState(1, logProbability::fromRegularProbability(0.85));
+    hiddenState* t= new hiddenState(2, logProbability::fromRegularProbability(0.15));
+    s->emissionMap = {{0,logProbability::fromRegularProbability(0.4)}, {1,logProbability::fromRegularProbability(0.6)}};
+    t->emissionMap = {{0,logProbability::fromRegularProbability(0.5)}, {1,logProbability::fromRegularProbability(0.5)}};
+    s->transitionMap = {{s, logProbability::fromRegularProbability(0.3)}, {t, logProbability::fromRegularProbability(0.7)}};
+    t->transitionMap = {{s, logProbability::fromRegularProbability(0.1)}, {t, logProbability::fromRegularProbability(0.9)}};
     HMM hmm({s,t}, {0,1});
 
     // Train
