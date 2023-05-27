@@ -40,8 +40,6 @@ public:
 
     std::map<std::string,Gesture> getFilteredGestures(const std::vector<std::vector<double>>& dataToAnalyse)const;
 
-    static std::map<std::string, bool> getFiltersFromData(const std::vector<std::vector<double>>& dataToAnalyse);
-
     std::string recognizeFromVideo(const char *AbsolutePath, MediapipeInterface* interface);
 
     std::pair<std::string, double> recognizeGesture(std::vector<int> &observed) const;

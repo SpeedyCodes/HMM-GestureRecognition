@@ -79,15 +79,16 @@ std::string GestureLibrary::realtimeRecognition(const std::vector<double>& frame
             return "";
         }
         std::cout << accumulatedLiveFeedData.size() << std::endl;
-        // More magic!
+        // More magic! Or less, you know better
         for(int i = 0; i != 5; i++) accumulatedLiveFeedData.erase(accumulatedLiveFeedData.begin());
         for(int i = 0; i != 5; i++) accumulatedLiveFeedData.pop_back();
-        std::map<std::string,bool> gestureFilter;
         // Preprocess data
-        //std::vector<Observable > observables = MediapipeInterface::preprocessMultiFeatureData(accumulatedLiveFeedData, gestureFilter);
         std::vector<Observable > observables = MediapipeInterface::preprocessData(accumulatedLiveFeedData);
+        std::map<std::string,bool> gestureFilter = MediapipeInterface::getFiltersFromData(accumulatedLiveFeedData);
+        // Get filtered gestures
+        std::map<std::string,Gesture> filteredGestures = getFilteredGestures(accumulatedLiveFeedData);
         // Get the highest likelihood and the name of the most probable gesture
-        std::pair<std::string, double> probableGesture = recognizeGesture(observables);
+        std::pair<std::string, double> probableGesture = recognizeFromGivenGestures(observables, filteredGestures);
         // Get threshold HMM
         if(thresholdHMM == nullptr){
             thresholdHMM = getThresholdHMM();
@@ -390,30 +391,21 @@ std::pair<std::string, double> GestureLibrary::recognizeFromGivenGestures(vector
     return gesture;
 }
 
-std::map<std::string, bool> GestureLibrary::getFiltersFromData(const std::vector<std::vector<double>>& dataToAnalyse){
-    // Calculate global features
-    std::map<std::string, bool> to_return;
-    double x_range = MediapipeInterface::getXRange(dataToAnalyse);
-    double y_range = MediapipeInterface::getYRange(dataToAnalyse);
-    // Global feature 1: mini-gesture (x- and y-range are <25%)
-    // Global feature 2: almost full (>85%) x-range
-    // Global feature 3: almost full (>85%) y-range
-    // Global feature 4: two hands
-    return to_return;
-}
-
 std::map<std::string,Gesture> GestureLibrary::getFilteredGestures(const std::vector<std::vector<double>>& dataToAnalyse)const{
     std::map<std::string,Gesture> to_return;
     // Get filters from data
-    std::map<std::string,bool> dataFilters = getFiltersFromData(dataToAnalyse);
+    std::map<std::string,bool> dataFilters = MediapipeInterface::getFiltersFromData(dataToAnalyse);
     for(const auto& gestureTuple:gestures){
         if(gestureTuple.second.getGestureFeatures().empty()){
             to_return.insert(gestureTuple);
-        }for(const auto& filter: dataFilters){
-            if(gestureTuple.second.getGestureFeatures().find(filter.first) != gestureTuple.second.getGestureFeatures().end()){
-                to_return.insert(gestureTuple);
-            }else if(gestureTuple.second.getGestureFeatures().at(filter.first) == filter.second){
-                to_return.insert(gestureTuple);
+        } else {
+                for(const auto& filter: dataFilters) {
+                    if (gestureTuple.second.getGestureFeatures().find(filter.first) !=
+                        gestureTuple.second.getGestureFeatures().end()) {
+                        to_return.insert(gestureTuple);
+                    } else if (gestureTuple.second.getGestureFeatures().at(filter.first) == filter.second) {
+                        to_return.insert(gestureTuple);
+                    }
             }
         }
     }

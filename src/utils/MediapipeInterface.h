@@ -15,11 +15,11 @@ public:
     bool close();
     bool isOpen() const;
     std::vector<std::vector<double>> getLandmarksFromVideo(const char* absoluteVideoPath);
-    static std::vector<int> preprocessMultiFeatureData(const std::vector<std::vector<double>>& data, std::map<std::string, bool>& gestureFeatures); // Data of one video
     static std::vector<int> preprocessData(const std::vector<std::vector<double>>& data); // Data of one video
     static std::vector<std::vector<int>> preprocessData(const std::vector<std::vector<std::vector<double>>>& data); // Data of multiple videos
     static double getXRange(const std::vector<std::vector<double>>& dataToAnalyse);
     static double getYRange(const std::vector<std::vector<double>>& dataToAnalyse);
+    static std::map<std::string, bool> getFiltersFromData(const std::vector<std::vector<double>>& dataToAnalyse);
 
 signals:
     void imageAvailable(QImage& image);
