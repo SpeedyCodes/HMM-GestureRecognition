@@ -32,17 +32,22 @@ public:
     bool initiateFileSystem(const string &path);
     void updateSavedGestures() const;
     bool isFileSystemInitiated() const;
-    bool modelTrainingAndSelection(std::vector<std::vector<Observable>>& observed, std::string gestureID);
-    bool isolatedRecognition(std::string& videoPath, std::string& gestureID);
     std::string realtimeRecognition(const std::vector<double>& frameLandmarks);
     bool
-    fitAndSelect(std::vector<std::vector<Observable> > GestureData, const std::string &gestureID, int stateAmount = 5,
+    fitAndSelect(std::vector<std::vector<Observable> > GestureData, const std::string &gestureID, int stateAmount = 15,
                  double threshold = 0.0001);
     const std::map<std::string, Gesture>& getGestures() const;
 
+    std::map<std::string,Gesture> getFilteredGestures(const std::vector<std::vector<double>>& dataToAnalyse)const;
+
+    static std::map<std::string, bool> getFiltersFromData(const std::vector<std::vector<double>>& dataToAnalyse);
+
     std::string recognizeFromVideo(const char *AbsolutePath, MediapipeInterface* interface);
 
-    std::pair<std::string, double> recognizeGesture(std::vector<int> &observed);
+    std::pair<std::string, double> recognizeGesture(std::vector<int> &observed) const;
+    std::pair<std::string, double> recognizeFromGivenGestures(vector<int>& observed, const std::map<std::string, Gesture>& givenGestures) const;
+
+
 private:
     HMM* createHMM(const std::map<Observable, double>& emissionMap, const std::vector<Observable>& observables, int states);
 };

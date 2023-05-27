@@ -82,3 +82,23 @@ nlohmann::json Gesture::toJson(const string &directory) {
     output["HMMpath"] = id + ".json";
     return output;
 }
+
+const map<std::string, bool> &Gesture::getGestureFeatures() const {
+    return gestureFeatures;
+}
+
+void Gesture::setGestureFeatures(const map<std::string, bool> &gestureFeatures) {
+    Gesture::gestureFeatures = gestureFeatures;
+}
+
+void Gesture::setId(const string &id) {
+    Gesture::id = id;
+}
+
+void Gesture::addGestureFeature(const std::string& featureName, bool value){
+    gestureFeatures.insert(std::make_pair(featureName, value));
+}
+
+void Gesture::removeGestureFeature(const std::string& featureName){
+    gestureFeatures.erase(featureName);
+}

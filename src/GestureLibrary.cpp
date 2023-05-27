@@ -36,7 +36,6 @@ HMM* GestureLibrary::getThresholdHMM() const{
             allHiddenStates.push_back(state); // Push to allHiddenStates
         }
     }
-    // TODO: if real-time recognition works slowly, add relative entropy
     // Get possible observables
     // TODO: if multiple channels: input of channel number instead of magic number 1
     //  (or if only one channel, remove map from possibleObservables)
@@ -68,6 +67,7 @@ std::string GestureLibrary::realtimeRecognition(const std::vector<double>& frame
         return "";
     }
     if(frameLandmarks[0] != -1 || frameLandmarks[1] != -1){ // The hand is not detected
+        for(int i = 0; i != counterOfEmptiness; i++) accumulatedLiveFeedData.push_back({0,0});
         accumulatedLiveFeedData.push_back(frameLandmarks);
         counterOfEmptiness = 0;
     }else {
@@ -82,7 +82,9 @@ std::string GestureLibrary::realtimeRecognition(const std::vector<double>& frame
         // More magic!
         for(int i = 0; i != 5; i++) accumulatedLiveFeedData.erase(accumulatedLiveFeedData.begin());
         for(int i = 0; i != 5; i++) accumulatedLiveFeedData.pop_back();
+        std::map<std::string,bool> gestureFilter;
         // Preprocess data
+        //std::vector<Observable > observables = MediapipeInterface::preprocessMultiFeatureData(accumulatedLiveFeedData, gestureFilter);
         std::vector<Observable > observables = MediapipeInterface::preprocessData(accumulatedLiveFeedData);
         // Get the highest likelihood and the name of the most probable gesture
         std::pair<std::string, double> probableGesture = recognizeGesture(observables);
@@ -348,9 +350,9 @@ std::string GestureLibrary::recognizeFromVideo(const char* AbsolutePath, Mediapi
     return gesture.first;
 }
 
-std::pair<std::string, double> GestureLibrary::recognizeGesture(vector<int>& observed){
+std::pair<std::string, double> GestureLibrary::recognizeGesture(vector<int>& observed) const{
     std::map<std::string, double>likelyhoodHMM;
-    std::map<std::string, Gesture>::iterator it;
+    std::map<std::string, Gesture>::const_iterator it;
     for (it = gestures.begin(); it != gestures.end(); it++){
         double likely = it->second.getHiddenMarkovModel()->likelihood(observed);
         likelyhoodHMM[it->first] = likely;
@@ -366,4 +368,54 @@ std::pair<std::string, double> GestureLibrary::recognizeGesture(vector<int>& obs
         }
     }
     return gesture;
+}
+
+std::pair<std::string, double> GestureLibrary::recognizeFromGivenGestures(vector<int>& observed, const std::map<std::string, Gesture>& givenGestures) const{
+    std::map<std::string, double>likelyhoodHMM;
+    std::map<std::string, Gesture>::const_iterator it;
+    for (it = givenGestures.begin(); it != givenGestures.end(); it++){
+        double likely = it->second.getHiddenMarkovModel()->likelihood(observed);
+        likelyhoodHMM[it->first] = likely;
+    }
+    std::pair<std::string, double>gesture;
+    gesture.first = likelyhoodHMM.begin()->first;
+    gesture.second = likelyhoodHMM.begin()->second;
+    std::map<std::string, double>::iterator it2;
+    for(it2 = likelyhoodHMM.begin(); it2!=likelyhoodHMM.end(); it2++){
+        if(it2->second > gesture.second){
+            gesture.first = it2->first;
+            gesture.second = it2->second;
+        }
+    }
+    return gesture;
+}
+
+std::map<std::string, bool> GestureLibrary::getFiltersFromData(const std::vector<std::vector<double>>& dataToAnalyse){
+    // Calculate global features
+    std::map<std::string, bool> to_return;
+    double x_range = MediapipeInterface::getXRange(dataToAnalyse);
+    double y_range = MediapipeInterface::getYRange(dataToAnalyse);
+    // Global feature 1: mini-gesture (x- and y-range are <25%)
+    // Global feature 2: almost full (>85%) x-range
+    // Global feature 3: almost full (>85%) y-range
+    // Global feature 4: two hands
+    return to_return;
+}
+
+std::map<std::string,Gesture> GestureLibrary::getFilteredGestures(const std::vector<std::vector<double>>& dataToAnalyse)const{
+    std::map<std::string,Gesture> to_return;
+    // Get filters from data
+    std::map<std::string,bool> dataFilters = getFiltersFromData(dataToAnalyse);
+    for(const auto& gestureTuple:gestures){
+        if(gestureTuple.second.getGestureFeatures().empty()){
+            to_return.insert(gestureTuple);
+        }for(const auto& filter: dataFilters){
+            if(gestureTuple.second.getGestureFeatures().find(filter.first) != gestureTuple.second.getGestureFeatures().end()){
+                to_return.insert(gestureTuple);
+            }else if(gestureTuple.second.getGestureFeatures().at(filter.first) == filter.second){
+                to_return.insert(gestureTuple);
+            }
+        }
+    }
+    return to_return;
 }

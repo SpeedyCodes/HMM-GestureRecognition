@@ -109,12 +109,15 @@ def extract_realtime_keypoints(results):
     #                results.right_hand_landmarks.landmark]).flatten() if results.right_hand_landmarks else np.zeros(
     #     21 * 3)
     # try:
-    if results is None: return [-1, -1]
+    if results is None: return [-1, -1, -1]
+    lefty = -1
+    if results.left_hand_landmarks:
+        lefty = 1
     if results.right_hand_landmarks:
         for res in results.right_hand_landmarks.landmark:
-            rh = [res.x, res.y]
+            rh = [res.x, res.y, lefty]      # TODO: it's not efficient, choose another method
     else:
-        rh = [-1, -1]
+        rh = [-1, -1, lefty]
     # except:
     #     rh = [0,0]
     return rh

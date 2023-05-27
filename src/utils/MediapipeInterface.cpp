@@ -45,7 +45,8 @@ void MediapipeInterface::onDataReady()
     }else{
         double* x = (double*)data.data();
         double* y = x + 1;
-        emit(dataAvailable({*x, *y}));
+        double* lefth = y + 1;
+        emit(dataAvailable({*x, *y, *lefth}));
     }
 }
 
@@ -151,8 +152,62 @@ std::vector<std::vector<double>> MediapipeInterface::getLandmarksFromVideo(const
 
     return result;
 }
+std::vector<int> MediapipeInterface::preprocessMultiFeatureData(const std::vector<std::vector<double>>& data, std::map<std::string, bool>& gestureFeatures){
+    const int magicNumber = 20; // parameter of the vector quantization TODO: set it in config
+    std::vector<int> to_return;
+    if(data.size() < 2){
+        std::cerr << "The given vector of data is empty or has only one element" << std::endl;
+        return to_return;
+    }
+    std::vector<double> previousFrameData;
+    bool firstFrame = true;
+    for(const std::vector<double>& frameData: data){
+        if(frameData.empty()) {
+            std::cerr << "Frame data is empty" <<std::endl;
+            continue;
+        }
+        if(firstFrame){
+            if(frameData[0] == -1 and frameData[1] == -1) continue; // For realime recognition
+            previousFrameData = frameData;
+            firstFrame = false;
+        }else{
+            double angle; // We use angle as the feature
+            if(frameData[0] != -1 or frameData[1] != -1){
+                double x = frameData[0] - previousFrameData[0];
+                double y = frameData[1] - previousFrameData[1];
+                if (x == 0)
+                {
+                    if (y > 0) angle = M_PI / 2;
+                    angle = -M_PI / 2;
+                }
+                else if (x < 0)
+                {
+                    angle = atan(y / x) + M_PI;
+                }
+                else{
+                    angle = atan(y / x);
+                }
+                // TODO: special number for absent observations + remove end trash?
+                angle = angle * 180.0 / M_PI; // Set to degrees
+                if(angle < 0) angle += 360;
+                angle /= magicNumber;
+                previousFrameData = frameData;
+            }else{ // Realtime recognition, the hand is not in the frame
+                angle = -1;
+                previousFrameData = {0,0};
+            }
+            to_return.push_back(static_cast<int>(std::round(angle)));
+        }
+    }
+    // Calculate global features
+    // Global feature 1: mini-gesture (x- and y-range are <25%)
+    // Global feature 2: almost full (>85%) x-range
+    // Global feature 3: almost full (>85%) y-range
+    // Global feature 4: two hands
+    return to_return;
+}
 std::vector<int> MediapipeInterface::preprocessData(const std::vector<std::vector<double>>& data){
-    const int magicNumber = 20; // parameter of the vector quantization
+    const int magicNumber = 20; // parameter of the vector quantization TODO: set it in config
     std::vector<int> to_return;
     if(data.size() < 2){
         std::cerr << "The given vector of data is empty or has only one element" << std::endl;
@@ -211,4 +266,29 @@ std::vector<std::vector<int>> MediapipeInterface::preprocessData(const std::vect
 
 bool MediapipeInterface::isOpen() const {
     return isOpened;
+}
+
+double MediapipeInterface::getXRange(const std::vector<std::vector<double>>& dataToAnalyse){
+    if(dataToAnalyse.empty()) return 0;
+    double x_min = std::numeric_limits<double>::infinity();
+    double x_max = -std::numeric_limits<double>::infinity();
+    for(auto vect:dataToAnalyse){
+        if(vect.empty()) continue;
+        if(vect[0] > x_max) x_max = vect[0];
+        if(vect[0] < x_min) x_min = vect[0];
+    }
+    if(x_min == std::numeric_limits<double>::infinity() || x_max == -std::numeric_limits<double>::infinity()) return 0;
+    return x_max-x_min;
+}
+double MediapipeInterface::getYRange(const std::vector<std::vector<double>>& dataToAnalyse){
+    if(dataToAnalyse.empty()) return 0;
+    double x_min = std::numeric_limits<double>::infinity();
+    double x_max = -std::numeric_limits<double>::infinity();
+    for(auto vect:dataToAnalyse){
+        if(vect.empty()) continue;
+        if(vect[1] > x_max) x_max = vect[1];
+        if(vect[1] < x_min) x_min = vect[1];
+    }
+    if(x_min == std::numeric_limits<double>::infinity() || x_max == -std::numeric_limits<double>::infinity()) return 0;
+    return x_max-x_min;
 }
