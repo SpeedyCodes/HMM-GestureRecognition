@@ -194,6 +194,9 @@ bool MainWindow::eventFilter(QObject *obj, QEvent *event)
         {
             // Toggle the bool variable each time the "Q" key is pressed
             library->filterPressed = !library->filterPressed;
+            if(!library->filterPressed) library->startAnalysis = true;
+            else library->startAnalysis = false;
+            qDebug() << "Q is now:" << library->filterPressed;
         }
     }
 

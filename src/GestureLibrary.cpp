@@ -66,6 +66,9 @@ std::string GestureLibrary::realtimeRecognition(const std::vector<double>& frame
         std::cerr << "Empty landmark in realtime recognition!" <<std::endl;
         return "";
     }
+    if(allowFilter || (!filterPressed && !startAnalysis)) {
+        return "";
+    }
     if(frameLandmarks[0] != -1 || frameLandmarks[1] != -1){ // The hand is not detected
         if(!accumulatedLiveFeedData.empty()) for(int i = 0; i != counterOfEmptiness; i++) accumulatedLiveFeedData.push_back({0,0});
         accumulatedLiveFeedData.push_back(frameLandmarks);
@@ -73,16 +76,17 @@ std::string GestureLibrary::realtimeRecognition(const std::vector<double>& frame
     }else {
         counterOfEmptiness++;
     }
-    if(counterOfEmptiness > 10){
+    if(counterOfEmptiness > 10 || startAnalysis){
         if(accumulatedLiveFeedData.size() < 15) { // TODO: remove hardcoded sliding window size or find the best value experimentally
             accumulatedLiveFeedData.clear(); // Remove garbage
             return "";
         }
         std::cout << accumulatedLiveFeedData.size() << std::endl;
         // More magic! Or less, you know better
-        // TODO: remove if q
-        for(int i = 0; i != 5; i++) accumulatedLiveFeedData.erase(accumulatedLiveFeedData.begin());
-        for(int i = 0; i != 5; i++) accumulatedLiveFeedData.pop_back();
+        if(!startAnalysis){
+            for(int i = 0; i != 5; i++) accumulatedLiveFeedData.erase(accumulatedLiveFeedData.begin());
+            for(int i = 0; i != 5; i++) accumulatedLiveFeedData.pop_back();
+        }
         // Preprocess data
         std::vector<Observable > observables = MediapipeInterface::preprocessData(accumulatedLiveFeedData);
         std::map<std::string,bool> gestureFilter = MediapipeInterface::getFiltersFromData(accumulatedLiveFeedData);
@@ -100,6 +104,7 @@ std::string GestureLibrary::realtimeRecognition(const std::vector<double>& frame
         // Get the highest likelihood and the name of the most probable gesture
         std::pair<std::string, double> probableGesture = recognizeFromGivenGestures(observables, gesturesToClassify);
         accumulatedLiveFeedData.clear();
+        startAnalysis = false;
         return probableGesture.first;
     }else return "";
 }

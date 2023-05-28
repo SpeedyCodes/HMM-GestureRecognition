@@ -55,6 +55,8 @@ public:
 
     bool allowFilter = true;
 
+    bool startAnalysis = false;
+
 
 private:
     HMM* createHMM(const std::map<Observable, double>& emissionMap, const std::vector<Observable>& observables, int states);
