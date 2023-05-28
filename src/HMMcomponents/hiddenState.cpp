@@ -7,7 +7,7 @@ hiddenState::hiddenState(int id, const map<hiddenState *, logProbability> &trans
                          const map<Observable, logProbability> &emissionMap, logProbability initialChance) : id(id), transitionMap(
         transitionMap), emissionMap(emissionMap), initialChance(initialChance) {}
 
-bool hiddenState::isValid() {
+bool hiddenState::isValid() const{
     logProbability sum = logProbability::fromRegularProbability(0);
     for (auto& pair:transitionMap){
         sum += pair.second;

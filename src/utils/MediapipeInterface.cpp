@@ -56,7 +56,7 @@ bool MediapipeInterface::open() {
     connect(&dataServer, &QTcpServer::newConnection, this, &MediapipeInterface::acceptConnection);
     dataServer.listen(QHostAddress::Any, 5001);
     pythonClients = new QProcess;
-    pythonClients->start("python", {"src/utils/run_tcp.py"}); // TODO what to do with systems on which the command is python3?
+    pythonClients->start(PYTHON_COMMAND, {"src/utils/run_tcp.py"});
     isOpened = true;
     return isOpened;
 }
@@ -75,8 +75,7 @@ bool MediapipeInterface::close() {
     dataConnection->abort();
     imageConnection->deleteLater();
     dataConnection->deleteLater();
-    pythonClients->terminate(); //TODO replace with something a little more memory-safe https://stackoverflow.com/questions/45927337/recieve-data-only-if-available-in-python-sockets
-    delete pythonClients;
+    pythonClients->deleteLater();
     imageConnection = nullptr;
     dataConnection = nullptr;
     isOpened = false;
@@ -87,7 +86,7 @@ MediapipeInterface::~MediapipeInterface() {
     close();
     Py_Finalize();
 }
-std::vector<std::vector<double>> MediapipeInterface::getLandmarksFromVideo(const char* videoPath){
+std::vector<std::vector<double>> MediapipeInterface::getLandmarksFromVideo(const char* videoPath) const{
     char cwd[1024];
     if (getcwd(cwd, sizeof(cwd)) == NULL) {
         std::cerr << "Error getting current working directory" << std::endl;
@@ -151,7 +150,7 @@ std::vector<std::vector<double>> MediapipeInterface::getLandmarksFromVideo(const
 
     return result;
 }
-std::vector<int> MediapipeInterface::preprocessData(const std::vector<std::vector<double>>& data){
+std::vector<Observable> MediapipeInterface::preprocessData(const std::vector<std::vector<double>>& data){
     const int magicNumber = 20; // parameter of the vector quantization
     std::vector<int> to_return;
     if(data.size() < 2){
@@ -184,7 +183,6 @@ std::vector<int> MediapipeInterface::preprocessData(const std::vector<std::vecto
             else{
                 angle = atan(y / x);
             }
-            // TODO: special number for absent observations + remove end trash?
             angle = angle * 180.0 / M_PI; // Set to degrees
             if(angle < 0) angle += 360;
             angle /= magicNumber;
@@ -194,7 +192,7 @@ std::vector<int> MediapipeInterface::preprocessData(const std::vector<std::vecto
     }
     return to_return;
 }
-std::vector<std::vector<int>> MediapipeInterface::preprocessData(const std::vector<std::vector<std::vector<double>>>& data){
+std::vector<std::vector<Observable>> MediapipeInterface::preprocessData(const std::vector<std::vector<std::vector<double>>>& data){
     std::vector<std::vector<int>> to_return;
     for(const std::vector<std::vector<double>>& singleVector: data){
         std::vector<int> to_add = preprocessData(singleVector);

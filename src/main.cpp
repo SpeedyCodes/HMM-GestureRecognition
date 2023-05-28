@@ -1,6 +1,9 @@
 #include "mainwindow.h"
 #include <QApplication>
-
+/**
+ * Starting point of the application.
+ * Initializes Qt and opens the main window.
+ */
 int main(int argc, char *argv[])
 {
     QApplication a(argc, argv);
