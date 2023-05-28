@@ -58,15 +58,13 @@ HMM* GestureLibrary::getThresholdHMM() const{
     return thresholdHMM;
 }
 std::string GestureLibrary::realtimeRecognition(const std::vector<double>& frameLandmarks){
+    // std::cout << allowFilter << filterPressed << startAnalysis << std::endl;
     if(gestures.empty()) {
         std::cerr << "You can't do realtime recognition without gestures in library" <<std::endl;
         return "";
     }
     if(frameLandmarks.empty()) {
         std::cerr << "Empty landmark in realtime recognition!" <<std::endl;
-        return "";
-    }
-    if(allowFilter || (!filterPressed && !startAnalysis)) {
         return "";
     }
     if(frameLandmarks[0] != -1 || frameLandmarks[1] != -1){ // The hand is not detected
@@ -79,6 +77,7 @@ std::string GestureLibrary::realtimeRecognition(const std::vector<double>& frame
     if(counterOfEmptiness > 10 || startAnalysis){
         if(accumulatedLiveFeedData.size() < 15) { // TODO: remove hardcoded sliding window size or find the best value experimentally
             accumulatedLiveFeedData.clear(); // Remove garbage
+            if(startAnalysis) startAnalysis = false;
             return "";
         }
         std::cout << accumulatedLiveFeedData.size() << std::endl;

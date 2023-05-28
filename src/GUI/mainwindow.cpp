@@ -196,7 +196,6 @@ bool MainWindow::eventFilter(QObject *obj, QEvent *event)
             library->filterPressed = !library->filterPressed;
             if(!library->filterPressed) library->startAnalysis = true;
             else library->startAnalysis = false;
-            qDebug() << "Q is now:" << library->filterPressed;
         }
     }
 
