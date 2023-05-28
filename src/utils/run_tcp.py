@@ -11,7 +11,7 @@ import get_landmarks as utils
 
 def run_tcp_sewer():
     """
-    Start the TCP server that transfers frames with drawn landmarks and the landmarks self
+    Start the TCP server that transfers frames with drawn landmarks and the landmarks themselves
 
     :return: Nothing to return, but the pain
     """
@@ -45,5 +45,7 @@ def run_tcp_sewer():
     cap.release()
     cv2.destroyAllWindows()
 
-run_tcp_sewer()
+
+if __name__ == '__main__':
+    run_tcp_sewer()
 

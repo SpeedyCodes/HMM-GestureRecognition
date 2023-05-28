@@ -70,7 +70,6 @@ def draw_styled_landmarks(image, results, draw_all):
         print(results.right_hand_landmarks)
 
 def extract_keypoints(results):
-    # TODO: save everything?...
 
     # pose = np.array([[res.x, res.y, res.z, res.visibility] for res in
     #                  results.pose_landmarks.landmark]).flatten() if results.pose_landmarks else np.zeros(33 * 4)

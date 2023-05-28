@@ -3,6 +3,8 @@
 #include <QFileDialog>
 #include <QStandardPaths>
 
+#define GET_LANDMARKS_TIME_USED 90.0  // roughly 90% of training time is used by getLandmarks
+
 GestureEditor::GestureEditor(QWidget *parent, GestureLibrary* library, MediapipeInterface* mediapipe) :
     QDialog(parent), ui(new Ui::GestureEditor), library(library), mediapipe(mediapipe)
 {
@@ -39,7 +41,7 @@ void GestureEditor::on_trainButton_clicked()
         std::string str = path.toStdString();
         const char* p = str.c_str();
         data.push_back(mediapipe->getLandmarksFromVideo(p));
-        ui->progressBar->setValue(95*(float)(i+1)/vidCount); // roughly 95% of time is used by getLandmarks, TODO remove magic number
+        ui->progressBar->setValue(GET_LANDMARKS_TIME_USED*(float)(i+1)/vidCount);
     }
     ui->statusLabel->setText(ui->statusLabel->text() + "Landmarks detected\n");
     ui->statusLabel->setText("Detecting gesture features...\n");
@@ -51,7 +53,7 @@ void GestureEditor::on_trainButton_clicked()
     ui->statusLabel->setText(ui->statusLabel->text() + "Fitting HMM\n");
     std::string gestureID = ui->nameLineEdit->text().toStdString();
     library->addGesture(gestureID, gestureFeatures);
-    bool success = library->fitAndSelect(observables, gestureID); //TODO stateAmount staat nu standaard op 10, mogelijks aanpassen
+    bool success = library->fitAndSelect(observables, gestureID);
     ui->progressBar->setValue(100);
     ui->statusLabel->setText(ui->statusLabel->text() + "HMM fitted\n");
     if(success) close(); // return to the mainwindow if there are no errors to show

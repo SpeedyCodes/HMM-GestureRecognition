@@ -1,5 +1,4 @@
 #include "Gesture.h"
-#include <fstream>
 #include <iostream>
 #include "HMM.h"
 

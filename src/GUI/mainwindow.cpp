@@ -163,6 +163,7 @@ void MainWindow::on_videoPickButton_clicked()
 void MainWindow::on_recognizeButton_clicked()
 {
     std::string str = videoInputPath.toStdString();
+    if(str.empty()) return;
     const char* p = str.c_str();
     string result = library->recognizeFromVideo(p, &mediaPipeInterface);
     handleGestureRecognized(result);

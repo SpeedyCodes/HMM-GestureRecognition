@@ -5,7 +5,7 @@
 using namespace std;
 
 bool testHiddenState(){
-    auto* state1 = new hiddenState(1, 0.75);
+    auto* state1 = new hiddenState(1, logProbability::fromRegularProbability(0.75));
     auto* state2 = new hiddenState();
     auto* state3 = new hiddenState();
 
@@ -13,24 +13,26 @@ bool testHiddenState(){
         cerr << "ID of state was not set properly" << endl;
         return false;
     }
-    if ( state1->initialChance != 0.75){
+    if (abs(state1->initialChance.toRegularProbability() - 0.75) >= 1e-12){
         cerr << "initial chance of state was not set properly" << endl;
         return false;
     }
 
-    state1->transitionMap = {{state1,0.6},{state2,0.2},{state3,0.3}};
-    state1->emissionMap= {{0,0.5},{1,0.5}};
+    state1->transitionMap = {{state1,logProbability::fromRegularProbability(0.6)},
+                             {state2,logProbability::fromRegularProbability(0.2)},
+                             {state3,logProbability::fromRegularProbability(0.3)}};
+    state1->emissionMap = {{0,logProbability::fromRegularProbability(0.5)},{1,logProbability::fromRegularProbability(0.5)}};
     if (state1->isValid()){
         cerr << "state shows as valid when being invalid" << endl;
         return false;
     }
-    state1->transitionMap[state1] = 0.5;
-    state1->emissionMap[0] = 0.7;
+    state1->transitionMap[state1] = logProbability::fromRegularProbability(0.5);
+    state1->emissionMap[0] = logProbability::fromRegularProbability(0.7);
     if (state1->isValid()){
         cerr << "state shows as valid when being invalid" << endl;
         return false;
     }
-    state1->emissionMap[0] = 0.5;
+    state1->emissionMap[0] = logProbability::fromRegularProbability(0.5);
     if (!state1->isValid()){
         cerr << "state shows as invalid when being valid" << endl;
         return false;
@@ -59,55 +61,108 @@ bool testHMM(){
         cerr << "hidden state id wasn't read in properly" << endl;
         return false;
     }
-    if (state->transitionMap[state] != 1){
+    if (abs(state->transitionMap[state].toRegularProbability()- 1) >= 1e-12){
         cerr << "transition probability wasn't read in properly" << endl;
         return false;
     }
-    if (state->emissionMap[5] != 0.1 || state->emissionMap[10] != 0.9){
+    if (abs(state->emissionMap[5].toRegularProbability() - 0.1) >= 1e-12 ||
+    abs(state->emissionMap[10].toRegularProbability() - 0.9) >= 1e-12){
         cerr << "emission probabilities weren't read in properly" << endl;
         return false;
     }
     return true;
 }
 
-bool testGesture() {
-    bool success = false;
-    Gesture gesture = Gesture("../tests/testGesture.json", success);
-    if (!success){
-        cerr << "generating gesture form json failed" << endl;
+bool testLogProbability() {
+    logProbability test = logProbability();
+    double temp = log(0.1);
+    if(test.getValueAsIs() != 0){
+        cerr << "default constructor did not work as expected" << endl;
         return false;
     }
-    if(gesture.getId() != "wave"){
-        cerr << "gestureID wasn't read in properly" << endl;
+    test = logProbability(42);
+    if(test.getValueAsIs() != 42){
+        cerr << "logProbability(double) constructor did not work as expected" << endl;
         return false;
     }
-    HMM* gestureHMM = gesture.getHiddenMarkovModel();
-    vector<Observable> observables = {0,1};
-    if (observables != gestureHMM->getObservables()){
-        cerr << "observables weren't read in properly" << endl;
+    test = logProbability(5.5053315359323628046792407314181098610994011615823063394746372533908665315939611884417962231821375873679619994819030433228041556259245564173394842148421124776181068382690349840793128993047447350840868725523755781639896004520582160011631962527438600148632373646357446267212049734134568368132539922745190865399596564908884187599205099162706537099010612892279142138488889802991096280841261829196283636052027982613253228951913165168815290726500965824168406309014597635734359347036302700052204142615403259884717844607013580);
+    if(abs(test.toRegularProbability() - 246) >= 1e-12){
+        cerr << "toRegularProbability did not work as expected" << endl;
         return false;
     }
-    if (gestureHMM->getHiddenStates().size() != 1){
-        cerr << "hidden states weren't read in properly" << endl;
+    test = logProbability::fromRegularProbability(5);
+    if(abs(test.toRegularProbability() - 5) >= 1e-12){
+        cerr << "fromRegularProbability did not work as expected" << endl;
         return false;
     }
-    hiddenState* state = gestureHMM->getHiddenStates()[0];
-    if (state->id != 0){
-        cerr << "hidden state id wasn't read in properly" << endl;
+    if(abs(test.getValueAsIs() - log(5)) >= 1e-12){
+        cerr << "fromRegularProbability did not work as expected" << endl;
         return false;
     }
-    if (state->transitionMap[state] != 1){
-        cerr << "transition probability wasn't read in properly" << endl;
+
+    //addition
+    auto log1 = logProbability(2);
+    auto log2 = logProbability(3);
+    if(abs((log1+log2).getValueAsIs() - log(exp(2) + exp(3))) >= 1e-12){
+        cerr << "operator + did not work as expected" << endl;
         return false;
     }
-    if (state->emissionMap[0] != 0.7 || state->emissionMap[1] != 0.3){
-        cerr << "emission probabilities weren't read in properly" << endl;
+    log1 += log2;
+    if(abs(log1.getValueAsIs() - log(exp(2) + exp(3))) >= 1e-12){
+        cerr << "operator += did not work as expected" << endl;
         return false;
     }
-    HMM* hmm2 = new HMM("../tests/testHMM.json", success);
-    gesture.setHiddenMarkovModel(hmm2);
-    if (gesture.getHiddenMarkovModel() != hmm2){
-        cerr << "the gesture's HMM wasn't set properly" << endl;
+
+    //subtraction
+    log1 = logProbability(2);
+    log2 = logProbability(3);
+    if(abs((log1+log2).getValueAsIs() - log(exp(2) - exp(3))) >= 1e-12){
+        cerr << "operator - did not work as expected" << endl;
+        return false;
+    }
+    log1 -= log2;
+    if(abs(log1.getValueAsIs() - log(exp(2) - exp(3))) >= 1e-12){
+        cerr << "operator -= did not work as expected" << endl;
+        return false;
+    }
+
+    //multiplication
+    log1 = logProbability(2);
+    log2 = logProbability(3);
+    if(abs((log1*log2).getValueAsIs() - (2+3)) >= 1e-12){
+        cerr << "operator * did not work as expected" << endl;
+        return false;
+    }
+
+    //division (logProbability)
+    log1 = logProbability(2);
+    log2 = logProbability(3);
+    if(abs((log1/log2).getValueAsIs() - (2-3)) >= 1e-12){
+        cerr << "operator /(with logProbability) did not work as expected" << endl;
+        return false;
+    }
+    log1 /= log2;
+    if(abs(log1.getValueAsIs() - (2-3)) >= 1e-12){
+        cerr << "operator /=(with logProbability) did not work as expected" << endl;
+        return false;
+    }
+
+    //division (double)
+    if(abs((log2/2).getValueAsIs() - ((double)3/2)) >= 1e-12){
+        cerr << "operator /(with double) did not work as expected" << endl;
+        return false;
+    }
+    log2 /= 2;
+    if(abs(log2.getValueAsIs() - ((double)3/2)) >= 1e-12){
+        cerr << "operator /=(with double) did not work as expected" << endl;
+        return false;
+    }
+
+    //greater than
+    log1 = logProbability(2);
+    log2 = logProbability(3);
+    if(log1 > log2){
+        cerr << "operator > did not work as expected" << endl;
         return false;
     }
     return true;
@@ -123,12 +178,12 @@ bool testBaumWelch1(){
     corpus.insert(corpus.end(), corpus2.begin(), corpus2.end());
 
     // Set first HMM
-    hiddenState* s = new hiddenState(1, 0.85);
-    hiddenState* t= new hiddenState(2, 0.15);
-    s->emissionMap = {{0,0.4}, {1,0.6}};
-    t->emissionMap = {{0,0.5}, {1,0.5}};
-    s->transitionMap = {{s, 0.3}, {t, 0.7}};
-    t->transitionMap = {{s, 0.1}, {t, 0.9}};
+    hiddenState* s = new hiddenState(1, logProbability::fromRegularProbability(0.85));
+    hiddenState* t= new hiddenState(2, logProbability::fromRegularProbability(0.15));
+    s->emissionMap = {{0,logProbability::fromRegularProbability(0.4)}, {1,logProbability::fromRegularProbability(0.6)}};
+    t->emissionMap = {{0,logProbability::fromRegularProbability(0.5)}, {1,logProbability::fromRegularProbability(0.5)}};
+    s->transitionMap = {{s, logProbability::fromRegularProbability(0.3)}, {t, logProbability::fromRegularProbability(0.7)}};
+    t->transitionMap = {{s, logProbability::fromRegularProbability(0.1)}, {t, logProbability::fromRegularProbability(0.9)}};
     HMM hmm({s,t}, {0,1});
 
     // Train
@@ -139,10 +194,7 @@ bool testBaumWelch1(){
 }
 
 int main(){
-    if(testBaumWelch1()){
-        std::cout << "Yay" << std::endl;
-    }
-    if (testHiddenState() && testHMM() && testGesture()){
+    if (testHiddenState() && testHMM() && testLogProbability() && testBaumWelch1()){
         cout << "all tests passed" << endl;
     }
     else {
