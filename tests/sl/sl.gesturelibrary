@@ -1,0 +1,85 @@
+{
+    "gestures": {
+        "bedankt": {
+            "HMMpath": "bedankt.json",
+            "features": {
+                "fullx": false,
+                "fully": false,
+                "left": true,
+                "mini": true
+            }
+        },
+        "demo": {
+            "HMMpath": "demo.json",
+            "features": {
+                "fullx": false,
+                "fully": false,
+                "left": true,
+                "mini": false
+            }
+        },
+        "dit": {
+            "HMMpath": "dit.json",
+            "features": {
+                "fullx": true,
+                "fully": true,
+                "left": false,
+                "mini": false
+            }
+        },
+        "gebarentaal": {
+            "HMMpath": "gebarentaal.json",
+            "features": {
+                "fullx": false,
+                "fully": false,
+                "left": true,
+                "mini": false
+            }
+        },
+        "hallo": {
+            "HMMpath": "hallo.json",
+            "features": {
+                "fullx": true,
+                "fully": false,
+                "left": false,
+                "mini": false
+            }
+        },
+        "is": {
+            "HMMpath": "is.json",
+            "features": {
+                "fullx": false,
+                "fully": false,
+                "left": false,
+                "mini": false
+            }
+        },
+        "luisteren": {
+            "HMMpath": "luisteren.json",
+            "features": {
+                "fullx": false,
+                "fully": false,
+                "left": false,
+                "mini": false
+            }
+        },
+        "om te": {
+            "HMMpath": "om te.json",
+            "features": {
+                "fullx": false,
+                "fully": false,
+                "left": false,
+                "mini": false
+            }
+        },
+        "voor": {
+            "HMMpath": "voor.json",
+            "features": {
+                "fullx": false,
+                "fully": false,
+                "left": false,
+                "mini": false
+            }
+        }
+    }
+}
