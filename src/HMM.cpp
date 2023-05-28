@@ -147,7 +147,7 @@ bool HMM::train(const vector<vector<Observable>> &dataVector){
             cerr << "No data was given to train with" << endl;
             return false;
         }
-        for (Observable observable: data) {                                                         //TODO als er unregognized observables zijn, moet het direct stoppen of gwn deze observables er uit halen?
+        for (Observable observable: data) {
             if (find(observables.begin(), observables.end(), observable) == observables.end()) {
                 cerr << "Data contains some unrecognized observables" << endl;
                 return false;
@@ -221,7 +221,7 @@ bool HMM::train(const vector<vector<Observable>> &dataVector){
     }
     // Calculate sum of sumXi2 and sumGamma1
     vector<logProbability> f_zero(hiddenStates.size(), logProbability::fromRegularProbability(0));
-    vector<vector<logProbability>> sumXi2(hiddenStates.size(), f_zero); // TODO: set here zero's
+    vector<vector<logProbability>> sumXi2(hiddenStates.size(), f_zero);
     for(auto Xi2:vector_sumXi2){
         for (int i = 0; i != hiddenStates.size(); i++){
             for (int j = 0; j != hiddenStates.size(); j++){
@@ -229,7 +229,7 @@ bool HMM::train(const vector<vector<Observable>> &dataVector){
             }
         }
     }
-    std::vector<logProbability> sumGamma1(hiddenStates.size(), logProbability::fromRegularProbability(0)); // TODO: zero's
+    std::vector<logProbability> sumGamma1(hiddenStates.size(), logProbability::fromRegularProbability(0));
     for(auto SG: vector_sumGamma1){
         for(int i = 0; i != hiddenStates.size(); i++){
             sumGamma1[i] += SG[i];

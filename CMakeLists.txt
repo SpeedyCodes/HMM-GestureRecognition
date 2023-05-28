@@ -10,6 +10,7 @@ include_directories(. lib src/GUI)
 include_directories(${Python_INCLUDE_DIRS})
 # You may specify the path to Python lib manually
 # link_libraries(C:/Users/dasha/AppData/Local/Programs/Python/Python310/libs/python310.lib)
+add_compile_definitions(PYTHON_COMMAND="python3") # the command to run python, may need to be changed to just "python"
 # Find Qt5 or Qt6
 find_package(Qt6 REQUIRED COMPONENTS Widgets Network Multimedia MultimediaWidgets)
 

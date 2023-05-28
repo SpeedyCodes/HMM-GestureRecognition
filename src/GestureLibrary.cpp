@@ -38,7 +38,6 @@ HMM* GestureLibrary::getThresholdHMM() const{
             allHiddenStates.push_back(state); // Push to allHiddenStates
         }
     }
-    // TODO: if real-time recognition works slowly, add relative entropy
     // Get possible observables
     // TODO: if multiple channels: input of channel number instead of magic number 1
     //  (or if only one channel, remove map from possibleObservables)
@@ -192,8 +191,6 @@ GestureLibrary::fitAndSelect(std::vector<std::vector<Observable> > GestureData, 
     //create and train the HMM with the highest success rate and assign it to the gesture
     HMM* newHMM = createHMM(emissionMap,observables,stateAmountHighestSuccess);
     newHMM->autoTrain(GestureData, threshold);
-    cout << "state amount: " << stateAmountHighestSuccess << endl;  //TODO deze feedback er uit halen?
-    cout << "success rate: " << newHMM->likelihood(GestureData).toRegularProbability() << endl;
     gestures.at(gestureID).setHiddenMarkovModel(newHMM);
 
     return true;
@@ -278,11 +275,11 @@ bool GestureLibrary::initiateFileSystem(const string &path) {
     name = QFileInfo(QString::fromStdString(path)).fileName().toStdString();
     json data;
     data["gestures"] = json(json::value_t::object);//empty object to be used as map
-    std::ofstream stream; //TODO helper method for json-to-file
+    std::ofstream stream;
     stream.open(path);
     stream<<std::setw(4)<<data<<std::endl;
     stream.close();
-    return true; //TODO handle invalid directories/filenames
+    return true;
 }
 
 bool GestureLibrary::isFileSystemInitiated() const {
@@ -326,6 +323,9 @@ std::string GestureLibrary::recognizeFromVideo(const char* AbsolutePath, Mediapi
 std::pair<std::string, logProbability> GestureLibrary::recognizeGesture(vector<int>& observed){
     std::map<std::string, logProbability>likelyhoodHMM;
     std::map<std::string, Gesture>::iterator it;
+    if(gestures.empty()){
+        return {"", logProbability::fromRegularProbability(0)};
+    }
     for (it = gestures.begin(); it != gestures.end(); it++){
         logProbability likely = it->second.getHiddenMarkovModel()->likelihood(observed);
         likelyhoodHMM[it->first] = likely;
