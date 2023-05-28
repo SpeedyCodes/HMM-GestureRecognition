@@ -159,9 +159,17 @@ std::vector<int> MediapipeInterface::preprocessData(const std::vector<std::vecto
         std::cerr << "The given vector of data is empty or has only one element" << std::endl;
         return to_return;
     }
+    std::vector<std::vector<double>> dataCopy = std::vector(data);
+    std::vector<double> first_zero = {0,0};
+    std::vector<double> second_zero = {0,0,1};
+    std::vector<double> third_zero = {0,0,-1};
+    // Remove trash in begin
+    while(dataCopy[0] == first_zero || dataCopy[0] == second_zero || dataCopy[0] == third_zero) dataCopy.erase(dataCopy.begin());
+    // Remove end trash
+    while(dataCopy.back() == first_zero || dataCopy.back() == second_zero || dataCopy.back() == third_zero) dataCopy.pop_back();
     std::vector<double> previousFrameData;
     bool firstFrame = true;
-    for(const std::vector<double>& frameData: data){
+    for(const std::vector<double>& frameData: dataCopy){
         if(frameData.empty()) {
             std::cerr << "Frame data is empty" <<std::endl;
             continue;
