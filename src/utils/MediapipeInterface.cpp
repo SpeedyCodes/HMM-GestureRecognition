@@ -227,6 +227,7 @@ double MediapipeInterface::getXRange(const std::vector<std::vector<double>>& dat
     double x_max = -std::numeric_limits<double>::infinity();
     for(auto vect:dataToAnalyse){
         if(vect.empty()) continue;
+        if(vect[0] ==  0 && vect[1] == 0) continue;
         if(vect[0] > x_max) x_max = vect[0];
         if(vect[0] < x_min) x_min = vect[0];
     }
@@ -239,6 +240,7 @@ double MediapipeInterface::getYRange(const std::vector<std::vector<double>>& dat
     double x_max = -std::numeric_limits<double>::infinity();
     for(auto vect:dataToAnalyse){
         if(vect.empty()) continue;
+        if(vect[0] ==  0 && vect[1] == 0) continue;
         if(vect[1] > x_max) x_max = vect[1];
         if(vect[1] < x_min) x_min = vect[1];
     }
@@ -261,12 +263,21 @@ std::map<std::string, bool> MediapipeInterface::getFiltersFromData(const std::ve
     if(y_range >= 0.85) to_return.insert(std::make_pair("fully", true));
     else to_return.insert(std::make_pair("fully", false));
     // Global feature 4: two hands
+    std::vector<std::vector<double>> dataCopy = std::vector(dataToAnalyse);
+    std::vector<double> first_zero = {0,0};
+    std::vector<double> second_zero = {0,0,1};
+    std::vector<double> third_zero = {0,0,-1};
+    // Remove trash in begin
+    while(dataCopy[0] == first_zero || dataCopy[0] == second_zero || dataCopy[0] == third_zero) dataCopy.erase(dataCopy.begin());
+    // Remove end trash
+    while(dataCopy.back() == first_zero || dataCopy.back() == second_zero || dataCopy.back() == third_zero) dataCopy.pop_back();
+
     unsigned int lefth = 0;
-    for(auto vec: dataToAnalyse){
+    for(auto vec: dataCopy){
         if(vec.size() < 3) continue;
-        if(vec[2] == -1) lefth++;
+        if(vec[2] == 1) lefth++;
     }
-    if(lefth >= dataToAnalyse.size()*0.85) to_return.insert(std::make_pair("left", true));
+    if(lefth >= dataToAnalyse.size()*0.5) to_return.insert(std::make_pair("left", true));
     else to_return.insert(std::make_pair("left", false));
 
     return to_return;

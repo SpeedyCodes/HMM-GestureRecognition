@@ -101,10 +101,10 @@ std::string GestureLibrary::realtimeRecognition(const std::vector<double>& frame
 //        accumulatedLiveFeedData.erase(accumulatedLiveFeedData.begin());
         accumulatedLiveFeedData.clear();
         // Compare the gesture likelihood to threshold
-        if(probableGesture.second > threshold) {
+        //if(probableGesture.second > threshold) {
             return probableGesture.first;
-        }
-        else return "";
+//        }
+//        else return "";
     }else return "";
 }
 bool
@@ -266,7 +266,7 @@ HMM *GestureLibrary::createHMM(const map<Observable, double> &emissionMap, const
 }
 
 bool GestureLibrary::addGesture(string &gestureID, std::map<std::string,bool> gestureFeatures) {
-    gestures.insert({gestureID, Gesture(gestureID, nullptr)});
+    gestures.insert({gestureID, Gesture(gestureID, nullptr, gestureFeatures)});
     return false;
 }
 

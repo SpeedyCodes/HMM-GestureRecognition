@@ -35,7 +35,7 @@ public:
     bool isFileSystemInitiated() const;
     std::string realtimeRecognition(const std::vector<double>& frameLandmarks);
     bool
-    fitAndSelect(std::vector<std::vector<Observable> > GestureData, const std::string &gestureID, int stateAmount = 15,
+    fitAndSelect(std::vector<std::vector<Observable> > GestureData, const std::string &gestureID, int stateAmount = 10,
                  double threshold = 0.0001);
     const std::map<std::string, Gesture>& getGestures() const;
 
