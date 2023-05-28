@@ -10,6 +10,7 @@
 #include <QStandardPaths>
 #include <QFileDialog>
 #include <QCheckBox>
+#include <QKeyEvent>
 
 MainWindow::MainWindow(QWidget *parent) :
     QMainWindow(parent),
@@ -34,12 +35,21 @@ MainWindow::MainWindow(QWidget *parent) :
     QCheckBox* checkBox = new QCheckBox("Multiple features on", this);
     QObject::connect(checkBox, SIGNAL(clicked(bool)), this, SLOT(setMultiple(bool)));
     QVBoxLayout* layout = new QVBoxLayout(ui->centralWidget);
-//    checkBox->move(100, 210);
-    layout->setContentsMargins(20, 500, 0, 0);
+    layout->setContentsMargins(20, 480, 0, 0);
     layout->addWidget(checkBox);
+
+    // Create a checkbox2
+    QCheckBox* checkBox2 = new QCheckBox("Use Q to segment realtime feed", this);
+    checkBox2->setChecked(true);
+    QObject::connect(checkBox2, SIGNAL(clicked(bool)), this, SLOT(setAllowFilter(bool)));
+    //QVBoxLayout* layout2 = new QVBoxLayout(ui->centralWidget);
+    layout->setContentsMargins(20, 520, 0, 0);
+    layout->addWidget(checkBox2);
 
     QIcon icon("src/GUI/logo.png");
     this->setWindowIcon(icon);
+    // Install an event filter on the application to capture key press events
+    qApp->installEventFilter(this);
 
     library = new GestureLibrary();
     signLanguageWriter = nullptr;
@@ -171,4 +181,26 @@ void MainWindow::tryRealtimeRecognition(const std::vector<double> &landmarks) {
 
 void MainWindow::setMultiple(bool check) {
     library->setMultipleOn(check);
+}
+
+bool MainWindow::eventFilter(QObject *obj, QEvent *event)
+{
+    if (event->type() == QEvent::KeyPress)
+    {
+        QKeyEvent *keyEvent = static_cast<QKeyEvent*>(event);
+
+        // Check if the pressed key is "Q"
+        if (keyEvent->key() == Qt::Key_Q)
+        {
+            // Toggle the bool variable each time the "Q" key is pressed
+            library->filterPressed = !library->filterPressed;
+        }
+    }
+
+    // Call the base class implementation for normal event processing
+    return QObject::eventFilter(obj, event);
+}
+
+void MainWindow::setAllowFilter(bool res){
+    library->allowFilter = res;
 }

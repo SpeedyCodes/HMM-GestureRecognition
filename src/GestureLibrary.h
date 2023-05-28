@@ -22,6 +22,7 @@ private:
     unsigned int counterOfEmptiness = 0;
     HMM* thresholdHMM = nullptr;
     bool multipleOn = false;
+
 public:
     explicit GestureLibrary(){};
     explicit GestureLibrary(std::string& path);
@@ -49,6 +50,10 @@ public:
     bool isMultipleOn() const;
 
     void setMultipleOn(bool multipleOn);
+
+    bool filterPressed = false;
+
+    bool allowFilter = true;
 
 
 private:
