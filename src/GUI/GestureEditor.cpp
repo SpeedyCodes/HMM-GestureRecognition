@@ -3,7 +3,7 @@
 #include <QFileDialog>
 #include <QStandardPaths>
 
-#define GET_LANDMARKS_TIME_USED 90.0  // roughly 95% of training time is used by getLandmarks
+#define GET_LANDMARKS_TIME_USED 90.0  // roughly 90% of training time is used by getLandmarks
 
 GestureEditor::GestureEditor(QWidget *parent, GestureLibrary* library, MediapipeInterface* mediapipe) :
     QDialog(parent), ui(new Ui::GestureEditor), library(library), mediapipe(mediapipe)

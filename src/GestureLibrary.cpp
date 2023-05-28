@@ -269,7 +269,7 @@ void GestureLibrary::updateSavedGestures() const {
     stream.close();
 }
 
-bool GestureLibrary::initiateFileSystem(const string &path) {
+void GestureLibrary::initiateFileSystem(const string &path) {
     using json = nlohmann::json;
     directory = QFileInfo(QString::fromStdString(path)).dir().absolutePath().toStdString();
     name = QFileInfo(QString::fromStdString(path)).fileName().toStdString();
@@ -279,7 +279,6 @@ bool GestureLibrary::initiateFileSystem(const string &path) {
     stream.open(path);
     stream<<std::setw(4)<<data<<std::endl;
     stream.close();
-    return true;
 }
 
 bool GestureLibrary::isFileSystemInitiated() const {
