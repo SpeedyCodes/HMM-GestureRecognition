@@ -268,6 +268,18 @@ std::map<std::string, bool> MediapipeInterface::getFiltersFromData(const std::ve
     for(auto vec: dataToAnalyse){
         filtersPerVideo.push_back(getFiltersFromData(vec));
     }
-    std::map<std::string, bool> etalonFilters = filtersPerVideo[0]; // TODO: finish this
-    return etalonFilters;
+    std::map<std::string, bool> etalonFilters = filtersPerVideo[0];
+    std::map<std::string, bool> to_return;
+    for(auto feature: etalonFilters){
+        unsigned int ons = 0;
+        unsigned int offs = 0;
+        for(auto videoFilter: filtersPerVideo){
+            if(videoFilter.find(feature.first) != videoFilter.end()){
+                if(videoFilter.at(feature.first)) ons++;
+                else offs++;
+            }
+        }
+        to_return.insert(std::make_pair(feature.first, ons > offs));
+    }
+    return to_return;
 }
