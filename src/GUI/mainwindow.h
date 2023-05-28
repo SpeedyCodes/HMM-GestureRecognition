@@ -44,12 +44,14 @@ private slots:
 
     void tryRealtimeRecognition(const std::vector<double> &landmarks);
 
+    void setMultiple(bool);
+
 private:
     Ui::MainWindow *ui;
     SignLanguageWriter* signLanguageWriter;
     RobotConnectionManager* robotConnectionManager;
     MediapipeInterface mediaPipeInterface;
-    GestureLibrary* library; // TODO: vector of pointers to GestureLibraries?
+    GestureLibrary* library;
     QString videoInputPath;
     
     void refreshGesturesView();

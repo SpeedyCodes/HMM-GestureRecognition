@@ -411,3 +411,11 @@ std::map<std::string,Gesture> GestureLibrary::getFilteredGestures(const std::vec
     }
     return to_return;
 }
+
+bool GestureLibrary::isMultipleOn() const {
+    return multipleOn;
+}
+
+void GestureLibrary::setMultipleOn(bool multipleOn) {
+    GestureLibrary::multipleOn = multipleOn;
+}

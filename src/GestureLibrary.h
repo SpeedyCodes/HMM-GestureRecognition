@@ -46,6 +46,10 @@ public:
     std::pair<std::string, double> recognizeGesture(std::vector<int> &observed) const;
     std::pair<std::string, double> recognizeFromGivenGestures(vector<int>& observed, const std::map<std::string, Gesture>& givenGestures) const;
 
+    bool isMultipleOn() const;
+
+    void setMultipleOn(bool multipleOn);
+
 
 private:
     HMM* createHMM(const std::map<Observable, double>& emissionMap, const std::vector<Observable>& observables, int states);

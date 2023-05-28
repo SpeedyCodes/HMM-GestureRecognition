@@ -36,7 +36,6 @@ private:
     QTcpServer dataServer;
     QProcess* pythonClients;
     bool isOpened;
-
 };
 
 

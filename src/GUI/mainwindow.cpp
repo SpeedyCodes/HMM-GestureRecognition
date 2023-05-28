@@ -32,10 +32,14 @@ MainWindow::MainWindow(QWidget *parent) :
 
     // Create a checkbox
     QCheckBox* checkBox = new QCheckBox("Multiple features on", this);
-    QVBoxLayout* layout = new QVBoxLayout(ui->videoTab);
+    QObject::connect(checkBox, SIGNAL(clicked(bool)), this, SLOT(SizeCHange(bool)));
+    QVBoxLayout* layout = new QVBoxLayout(ui->centralWidget);
 //    checkBox->move(100, 210);
-    layout->setContentsMargins(50, 300, 0, 0);
+    layout->setContentsMargins(20, 500, 0, 0);
     layout->addWidget(checkBox);
+
+    QIcon icon("src/GUI/logo.png");
+    this->setWindowIcon(icon);
 
     library = new GestureLibrary();
     signLanguageWriter = nullptr;
@@ -165,3 +169,6 @@ void MainWindow::tryRealtimeRecognition(const std::vector<double> &landmarks) {
     }
 }
 
+void MainWindow::setMultiple(bool check) {
+    library->setMultipleOn(check);
+}
