@@ -15,7 +15,7 @@ import sys
 ##################### YOU MAY EDIT THIS ######################
 ##############################################################
 # Path for exported data
-folder_name = os.path.join(os.getcwd(), '../../../Sign-language')
+folder_name = os.path.join(os.getcwd(), '../../../trash')
 
 # Names of gestures
 gestures = np.array(['luisteren'])

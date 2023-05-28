@@ -85,26 +85,16 @@ std::string GestureLibrary::realtimeRecognition(const std::vector<double>& frame
         // Preprocess data
         std::vector<Observable > observables = MediapipeInterface::preprocessData(accumulatedLiveFeedData);
         std::map<std::string,bool> gestureFilter = MediapipeInterface::getFiltersFromData(accumulatedLiveFeedData);
+        for(auto filt:gestureFilter){
+            std::cout << filt.first << ": " << filt.second << std::endl;
+        }
         // Get filtered gestures
-        std::map<std::string,Gesture> filteredGestures = getFilteredGestures(accumulatedLiveFeedData);
+        std::map<std::string,Gesture> filteredGestures = getFilteredGestures(accumulatedLiveFeedData, gestureFilter);
+        if(filteredGestures.empty()) return "";
         // Get the highest likelihood and the name of the most probable gesture
         std::pair<std::string, double> probableGesture = recognizeFromGivenGestures(observables, filteredGestures);
-        // Get threshold HMM
-        if(thresholdHMM == nullptr){
-            thresholdHMM = getThresholdHMM();
-        }
-        // Calculate the likelihood of the threshold HMM
-        double threshold = thresholdHMM->likelihood(observables);
-//        std::cout << "Threshold = " << threshold <<std::endl;
-//        std::cout << "Possible gesture " << probableGesture.first << " with " << probableGesture.second << std::endl;
-        // Remove the first element of the accumulated live feed
-//        accumulatedLiveFeedData.erase(accumulatedLiveFeedData.begin());
         accumulatedLiveFeedData.clear();
-        // Compare the gesture likelihood to threshold
-        //if(probableGesture.second > threshold) {
-            return probableGesture.first;
-//        }
-//        else return "";
+        return probableGesture.first;
     }else return "";
 }
 bool
@@ -334,7 +324,15 @@ void GestureLibrary::readIn(const string &path) {
         bool success;
         const string &relativeJsonPath = item.value()["HMMpath"].get<string>();
         const string absoluteJsonPath = QDir(QString::fromStdString(directory)).filePath(QString::fromStdString(relativeJsonPath)).toStdString();
-        gestures.insert({item.key(), Gesture(item.key(), new HMM(absoluteJsonPath, success))});
+        // Read features
+        nlohmann::json tagMap = item.value()["features"];
+        std::map<std::string,bool> gestureFeatures;
+        for (auto it = tagMap.begin(); it != tagMap.end(); ++it) {
+            std::string key = it.key();
+            bool value = it.value().get<bool>();
+            gestureFeatures[key] = value;
+        }
+        gestures.insert({item.key(), Gesture(item.key(), new HMM(absoluteJsonPath, success), gestureFeatures)});
         if(!success) cerr << "Gesture " << item.key() << "points to an invalid HMM JSON file" << endl;
     }
 }
@@ -391,22 +389,21 @@ std::pair<std::string, double> GestureLibrary::recognizeFromGivenGestures(vector
     return gesture;
 }
 
-std::map<std::string,Gesture> GestureLibrary::getFilteredGestures(const std::vector<std::vector<double>>& dataToAnalyse)const{
+std::map<std::string,Gesture> GestureLibrary::getFilteredGestures(const std::vector<std::vector<double>>& dataToAnalyse, std::map<std::string,bool> dataFilters)const{
     std::map<std::string,Gesture> to_return;
-    // Get filters from data
-    std::map<std::string,bool> dataFilters = MediapipeInterface::getFiltersFromData(dataToAnalyse);
     for(const auto& gestureTuple:gestures){
         if(gestureTuple.second.getGestureFeatures().empty()){
             to_return.insert(gestureTuple);
         } else {
+                bool same = true;
                 for(const auto& filter: dataFilters) {
-                    if (gestureTuple.second.getGestureFeatures().find(filter.first) !=
-                        gestureTuple.second.getGestureFeatures().end()) {
+                    if (gestureTuple.second.getGestureFeatures().find(filter.first) == gestureTuple.second.getGestureFeatures().end()) {
                         to_return.insert(gestureTuple);
-                    } else if (gestureTuple.second.getGestureFeatures().at(filter.first) == filter.second) {
-                        to_return.insert(gestureTuple);
+                    } else if (gestureTuple.second.getGestureFeatures().at(filter.first) != filter.second) {
+                        same = false;
                     }
             }
+            if(same) to_return.insert(gestureTuple);
         }
     }
     return to_return;

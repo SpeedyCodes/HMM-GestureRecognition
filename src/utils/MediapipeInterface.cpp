@@ -256,11 +256,11 @@ std::map<std::string, bool> MediapipeInterface::getFiltersFromData(const std::ve
     // Global feature 1: mini-gesture (x- and y-range are <25%)
     if(x_range <= 0.25 && y_range <= 0.25) to_return.insert(std::make_pair("mini", true));
     else to_return.insert(std::make_pair("mini", false));
-    // Global feature 2: almost full (>85%) x-range
-    if(x_range >= 0.85) to_return.insert(std::make_pair("fullx", true));
+    // Global feature 2: almost full (>65%) x-range
+    if(x_range >= 0.65) to_return.insert(std::make_pair("fullx", true));
     else to_return.insert(std::make_pair("fullx", false));
-    // Global feature 3: almost full (>85%) y-range
-    if(y_range >= 0.85) to_return.insert(std::make_pair("fully", true));
+    // Global feature 3: almost full (>75%) y-range
+    if(y_range >= 0.75) to_return.insert(std::make_pair("fully", true));
     else to_return.insert(std::make_pair("fully", false));
     // Global feature 4: two hands
     std::vector<std::vector<double>> dataCopy = std::vector(dataToAnalyse);
