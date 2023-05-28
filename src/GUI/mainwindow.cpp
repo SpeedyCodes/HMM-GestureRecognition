@@ -31,7 +31,7 @@ MainWindow::MainWindow(QWidget *parent) :
     //videoWidget->show();
 
     // Create a checkbox
-    QCheckBox* checkBox = new QCheckBox("My Checkbox", this);
+    QCheckBox* checkBox = new QCheckBox("Multiple features on", this);
     QVBoxLayout* layout = new QVBoxLayout(ui->videoTab);
 //    checkBox->move(100, 210);
     layout->setContentsMargins(50, 300, 0, 0);
