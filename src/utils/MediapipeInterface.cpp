@@ -263,3 +263,11 @@ std::map<std::string, bool> MediapipeInterface::getFiltersFromData(const std::ve
 
     return to_return;
 }
+static std::map<std::string, bool> MediapipeInterface::getFiltersFromData(const std::vector<std::vector<std::vector<double>& dataToAnalyse){
+    std::vector<std::map<std::string, bool>> filtersPerVideo;
+    for(auto vec: dataToAnalyse){
+        filtesPerVideo.push_back(getFiltersFromData(vec));
+    }
+    std::map<std::string, bool> etalonFilters = filtersPerVideo[0]; // TODO: finish this
+    return etalonFilters;
+}
