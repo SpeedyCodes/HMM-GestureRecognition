@@ -21,9 +21,10 @@ public:
  * Constructor to use when making a brand-new gesture with a HMM that has just been trained.
  * @param gestureId The name of the gesture
  * @param hiddenMarkovModel A pointer to the Hidden Markov Model to recognize the gesture
+ * @param features Global gesture features
  */
 
-    Gesture(const string &gestureId, HMM *hiddenMarkovModel);
+    Gesture(const string &gestureId, HMM *hiddenMarkovModel, std::map<std::string,bool> features = {});
 
 /**
  * Constructor to load a gesture from a JSON file.

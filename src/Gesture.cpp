@@ -3,8 +3,8 @@
 #include <iostream>
 #include "HMM.h"
 
-Gesture::Gesture(const string &gestureId, HMM *hiddenMarkovModel) : id(gestureId),
-                                                                    hiddenMarkovModel(hiddenMarkovModel) {}
+Gesture::Gesture(const string &gestureId, HMM *hiddenMarkovModel, std::map<std::string,bool> features) : id(gestureId),
+                                                                    hiddenMarkovModel(hiddenMarkovModel), gestureFeatures(features) {}
 
 const string &Gesture::getId() const {
     return id;

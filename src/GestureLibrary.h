@@ -28,7 +28,7 @@ public:
     void setPossibleObservables(std::map <int, std::vector<Observable > > observables);
     HMM* getThresholdHMM() const;
     bool addGesture(Gesture& gesture);
-    bool addGesture(string& gestureID);
+    bool addGesture(string& gestureID, std::map<std::string,bool> gestureFeatures = {});
     void readIn(const string &path);
     bool initiateFileSystem(const string &path);
     void updateSavedGestures() const;

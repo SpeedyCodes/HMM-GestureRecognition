@@ -265,7 +265,7 @@ HMM *GestureLibrary::createHMM(const map<Observable, double> &emissionMap, const
     return nStateHMM;
 }
 
-bool GestureLibrary::addGesture(string &gestureID) {
+bool GestureLibrary::addGesture(string &gestureID, std::map<std::string,bool> gestureFeatures) {
     gestures.insert({gestureID, Gesture(gestureID, nullptr)});
     return false;
 }

@@ -32,7 +32,7 @@ MainWindow::MainWindow(QWidget *parent) :
 
     // Create a checkbox
     QCheckBox* checkBox = new QCheckBox("Multiple features on", this);
-    QObject::connect(checkBox, SIGNAL(clicked(bool)), this, SLOT(SizeCHange(bool)));
+    QObject::connect(checkBox, SIGNAL(clicked(bool)), this, SLOT(setMultiple(bool)));
     QVBoxLayout* layout = new QVBoxLayout(ui->centralWidget);
 //    checkBox->move(100, 210);
     layout->setContentsMargins(20, 500, 0, 0);
