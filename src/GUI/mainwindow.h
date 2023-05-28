@@ -23,6 +23,7 @@ class MainWindow : public QMainWindow
 
 public:
     explicit MainWindow(QWidget *parent = nullptr);
+    bool eventFilter(QObject *obj, QEvent *event) override;
     ~MainWindow();
 
 public slots:
@@ -54,6 +55,10 @@ private slots:
 
     void tryRealtimeRecognition(const std::vector<double> &landmarks);
 
+    void setMultiple(bool);
+
+    void setAllowFilter(bool);
+    
     void applicationWindowClosed();
 
 private:

@@ -22,7 +22,8 @@ HMM* GestureLibrary::getThresholdHMM() const{
     for(std::pair<std::string, Gesture> gesturePair: gestures){
         Gesture gesture = gesturePair.second; // Get gesture
         HMM* gestureHMM = gesture.getHiddenMarkovModel();
-        std::vector<hiddenState*> gestureStates = gestureHMM->getHiddenStates();
+        HMM* gestureCopy = new HMM(*gestureHMM);
+        std::vector<hiddenState*> gestureStates = gestureCopy->getHiddenStates();
         int numberOfStates = gestureStates.size();
         // Traverse all states of the gesture
         for(hiddenState* &state: gestureStates){
@@ -60,23 +61,54 @@ HMM* GestureLibrary::getThresholdHMM() const{
     return thresholdHMM;
 }
 std::string GestureLibrary::realtimeRecognition(const std::vector<double>& frameLandmarks){
-    accumulatedLiveFeedData.push_back(frameLandmarks);
-    if(accumulatedLiveFeedData.size() < 5) return "";  // TODO: remove hardcoded sliding window size or find the best value experimentally
-    // Preprocess data
-    std::vector<Observable > observables = MediapipeInterface::preprocessData(accumulatedLiveFeedData);
-    // Get the highest likelihood and the name of the most probable gesture
-    std::pair<std::string, logProbability> probableGesture = recognizeGesture(observables);
-    // Get threshold HMM
-    if(thresholdHMM == nullptr){
-        thresholdHMM = getThresholdHMM();
+    // std::cout << allowFilter << filterPressed << startAnalysis << std::endl;
+    if(gestures.empty()) {
+        std::cerr << "You can't do realtime recognition without gestures in library" <<std::endl;
+        return "";
     }
-    // Calculate the likelihood of the threshold HMM
-    logProbability threshold = thresholdHMM->likelihood(observables);
-    // Remove the first element of the accumulated live feed
-    accumulatedLiveFeedData.erase(accumulatedLiveFeedData.begin());
-    // Compare the gesture likelihood to threshold
-    if(probableGesture.second > threshold) return probableGesture.first;
-    else return "";
+    if(frameLandmarks.empty()) {
+        std::cerr << "Empty landmark in realtime recognition!" <<std::endl;
+        return "";
+    }
+    if(frameLandmarks[0] != -1 || frameLandmarks[1] != -1){ // The hand is not detected
+        if(!accumulatedLiveFeedData.empty()) for(int i = 0; i != counterOfEmptiness; i++) accumulatedLiveFeedData.push_back({0,0});
+        accumulatedLiveFeedData.push_back(frameLandmarks);
+        counterOfEmptiness = 0;
+    }else {
+        counterOfEmptiness++;
+    }
+    if(counterOfEmptiness > 10 || startAnalysis){
+        if(accumulatedLiveFeedData.size() < 15) { // TODO: remove hardcoded sliding window size or find the best value experimentally
+            accumulatedLiveFeedData.clear(); // Remove garbage
+            if(startAnalysis) startAnalysis = false;
+            return "";
+        }
+        std::cout << accumulatedLiveFeedData.size() << std::endl;
+        // More magic! Or less, you know better
+        if(!startAnalysis){
+            for(int i = 0; i != 5; i++) accumulatedLiveFeedData.erase(accumulatedLiveFeedData.begin());
+            for(int i = 0; i != 5; i++) accumulatedLiveFeedData.pop_back();
+        }
+        // Preprocess data
+        std::vector<Observable > observables = MediapipeInterface::preprocessData(accumulatedLiveFeedData);
+        std::map<std::string,bool> gestureFilter = MediapipeInterface::getFiltersFromData(accumulatedLiveFeedData);
+        for(auto filt:gestureFilter){
+            std::cout << filt.first << ": " << filt.second << std::endl;
+        }
+        std::map<std::string,Gesture> gesturesToClassify;
+        if(multipleOn){
+            // Get filtered gestures
+            gesturesToClassify = getFilteredGestures(gestureFilter);
+        }else{
+            gesturesToClassify = gestures;
+        }
+        if(gesturesToClassify.empty()) return "";
+        // Get the highest likelihood and the name of the most probable gesture
+        std::pair<std::string, logProbability> probableGesture = recognizeFromGivenGestures(observables, gesturesToClassify);
+        accumulatedLiveFeedData.clear();
+        startAnalysis = false;
+        return probableGesture.first;
+    }else return "";
 }
 bool
 GestureLibrary::fitAndSelect(std::vector<std::vector<Observable> > GestureData, const std::string &gestureID,
@@ -234,8 +266,8 @@ HMM *GestureLibrary::createHMM(const map<Observable, logProbability> &emissionMa
     return nStateHMM;
 }
 
-bool GestureLibrary::addGesture(string &gestureID) {
-    gestures.insert({gestureID, Gesture(gestureID, nullptr)});
+bool GestureLibrary::addGesture(string &gestureID, std::map<std::string,bool> gestureFeatures) {
+    gestures.insert({gestureID, Gesture(gestureID, nullptr, gestureFeatures)});
     return false;
 }
 
@@ -302,7 +334,15 @@ void GestureLibrary::readIn(const string &path) {
         bool success;
         const string &relativeJsonPath = item.value()["HMMpath"].get<string>();
         const string absoluteJsonPath = QDir(QString::fromStdString(directory)).filePath(QString::fromStdString(relativeJsonPath)).toStdString();
-        gestures.insert({item.key(), Gesture(item.key(), new HMM(absoluteJsonPath, success))});
+        // Read features
+        nlohmann::json tagMap = item.value()["features"];
+        std::map<std::string,bool> gestureFeatures;
+        for (auto it = tagMap.begin(); it != tagMap.end(); ++it) {
+            std::string key = it.key();
+            bool value = it.value().get<bool>();
+            gestureFeatures[key] = value;
+        }
+        gestures.insert({item.key(), Gesture(item.key(), new HMM(absoluteJsonPath, success), gestureFeatures)});
         if(!success) cerr << "Gesture " << item.key() << "points to an invalid HMM JSON file" << endl;
     }
 }
@@ -315,16 +355,24 @@ const std::map<std::string, Gesture> &GestureLibrary::getGestures() const {
 std::string GestureLibrary::recognizeFromVideo(const char* AbsolutePath, MediapipeInterface* interface){
     std::vector<std::vector<double>> landmarks = interface->getLandmarksFromVideo(AbsolutePath);
     std::vector<int> data = MediapipeInterface::preprocessData(landmarks);
-    std::pair<std::string, logProbability>gesture = recognizeGesture(data);
+    std::pair<std::string, logProbability>gesture;
+    if(!multipleOn) gesture = recognizeGesture(data);
+    else{
+        std::map<std::string,bool> filters = MediapipeInterface::getFiltersFromData(landmarks);
+        std::map<std::string, Gesture> filtered = getFilteredGestures(filters);
+        if(filtered.empty()) gesture = recognizeGesture(data);
+        else gesture = recognizeFromGivenGestures(data, filtered);
+    }
     return gesture.first;
 }
 
-std::pair<std::string, logProbability> GestureLibrary::recognizeGesture(vector<int>& observed){
+std::pair<std::string, logProbability> GestureLibrary::recognizeGesture(vector<int>& observed) const{
     std::map<std::string, logProbability>likelyhoodHMM;
-    std::map<std::string, Gesture>::iterator it;
+    std::map<std::string, Gesture>::const_iterator it;
     if(gestures.empty()){
         return {"", logProbability::fromRegularProbability(0)};
     }
+  
     for (it = gestures.begin(); it != gestures.end(); it++){
         logProbability likely = it->second.getHiddenMarkovModel()->likelihood(observed);
         likelyhoodHMM[it->first] = likely;
@@ -340,4 +388,52 @@ std::pair<std::string, logProbability> GestureLibrary::recognizeGesture(vector<i
         }
     }
     return gesture;
+}
+
+std::pair<std::string, logProbability> GestureLibrary::recognizeFromGivenGestures(vector<int>& observed, const std::map<std::string, Gesture>& givenGestures) const{
+    std::map<std::string, logProbability>likelyhoodHMM;
+    std::map<std::string, Gesture>::const_iterator it;
+    for (it = givenGestures.begin(); it != givenGestures.end(); it++){
+        logProbability likely = it->second.getHiddenMarkovModel()->likelihood(observed);
+        likelyhoodHMM[it->first] = likely;
+    }
+    std::pair<std::string, logProbability>gesture;
+    gesture.first = likelyhoodHMM.begin()->first;
+    gesture.second = likelyhoodHMM.begin()->second;
+    std::map<std::string, logProbability>::iterator it2;
+    for(it2 = likelyhoodHMM.begin(); it2!=likelyhoodHMM.end(); it2++){
+        if(it2->second > gesture.second){
+            gesture.first = it2->first;
+            gesture.second = it2->second;
+        }
+    }
+    return gesture;
+}
+
+std::map<std::string,Gesture> GestureLibrary::getFilteredGestures(std::map<std::string,bool> dataFilters)const{
+    std::map<std::string,Gesture> to_return;
+    for(const auto& gestureTuple:gestures){
+        if(gestureTuple.second.getGestureFeatures().empty()){
+            to_return.insert(gestureTuple);
+        } else {
+                bool same = true;
+                for(const auto& filter: dataFilters) {
+                    if (gestureTuple.second.getGestureFeatures().find(filter.first) == gestureTuple.second.getGestureFeatures().end()) {
+                        to_return.insert(gestureTuple);
+                    } else if (gestureTuple.second.getGestureFeatures().at(filter.first) != filter.second) {
+                        same = false;
+                    }
+            }
+            if(same) to_return.insert(gestureTuple);
+        }
+    }
+    return to_return;
+}
+
+bool GestureLibrary::isMultipleOn() const {
+    return multipleOn;
+}
+
+void GestureLibrary::setMultipleOn(bool multipleOn) {
+    GestureLibrary::multipleOn = multipleOn;
 }

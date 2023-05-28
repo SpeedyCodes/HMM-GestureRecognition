@@ -47,6 +47,11 @@ public:
  */
 
     bool isOpen() const;
+  
+    static double getXRange(const std::vector<std::vector<double>>& dataToAnalyse);
+    static double getYRange(const std::vector<std::vector<double>>& dataToAnalyse);
+    static std::map<std::string, bool> getFiltersFromData(const std::vector<std::vector<std::vector<double>>>& dataToAnalyse);
+    static std::map<std::string, bool> getFiltersFromData(const std::vector<std::vector<double>>& dataToAnalyse);
 
 /**
  * Gets landmark data from a video at a given path.
@@ -98,7 +103,6 @@ private:
     QTcpServer dataServer;
     QProcess* pythonClients;
     bool isOpened;
-
 };
 
 

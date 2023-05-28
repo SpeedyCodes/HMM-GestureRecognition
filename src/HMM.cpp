@@ -494,6 +494,39 @@ const vector<Observable> &HMM::getObservables() const {
     return observables;
 }
 
+HMM::HMM(const HMM& other): observables(other.observables) {
+    // Create a map to store the original to copied hiddenState pointers
+    std::map<hiddenState *, hiddenState *> originalToCopy;
+    std::vector<hiddenState *> newHiddenStates;
+
+    // Make copy of each hidden state and fill it in originalToCopy
+    for (auto state: other.hiddenStates) {
+        hiddenState *newState = new hiddenState(*state);
+        originalToCopy[state] = newState;
+        newHiddenStates.push_back(newState);
+    }
+
+    // Iterate over all state and correct states
+    for (hiddenState *state: newHiddenStates) {
+        for (const auto &entry: state->transitionMap) {
+            // Find the corresponding copied hiddenState pointer in the map
+            auto it = originalToCopy.find(entry.first);
+            if (it != originalToCopy.end()) {
+                state->transitionMap[it->second] = entry.second;
+            }
+        }
+    }
+    // Remove old states
+    for (hiddenState *state: newHiddenStates) {
+        for (std::map<hiddenState *, logProbability>::iterator it = state->transitionMap.begin();
+             it != state->transitionMap.end();) {
+            if (std::find(newHiddenStates.begin(), newHiddenStates.end(), it->first) == newHiddenStates.end()) {
+                state->transitionMap.erase((it++)->first);
+            } else { ++it; }
+        }
+    }
+    hiddenStates = newHiddenStates;
+}
 std::map<Observable, double>HMM::learnDistributionFromSamples(std::vector<std::vector<Observable>>samples){
     std::map<Observable, double> grade;
     int alls = 0;

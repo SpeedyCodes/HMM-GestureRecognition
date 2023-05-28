@@ -45,7 +45,8 @@ void MediapipeInterface::onDataReady()
     }else{
         double* x = (double*)data.data();
         double* y = x + 1;
-        emit(dataAvailable({*x, *y}));
+        double* lefth = y + 1;
+        emit(dataAvailable({*x, *y, *lefth}));
     }
 }
 
@@ -151,43 +152,57 @@ std::vector<std::vector<double>> MediapipeInterface::getLandmarksFromVideo(const
     return result;
 }
 std::vector<Observable> MediapipeInterface::preprocessData(const std::vector<std::vector<double>>& data){
-    const int magicNumber = 20; // parameter of the vector quantization
+    const int magicNumber = 20; // parameter of the vector quantization TODO: set it in config
     std::vector<int> to_return;
     if(data.size() < 2){
         std::cerr << "The given vector of data is empty or has only one element" << std::endl;
         return to_return;
     }
+    std::vector<std::vector<double>> dataCopy = std::vector(data);
+    std::vector<double> first_zero = {0,0};
+    std::vector<double> second_zero = {0,0,1};
+    std::vector<double> third_zero = {0,0,-1};
+    // Remove trash in begin
+    while(dataCopy[0] == first_zero || dataCopy[0] == second_zero || dataCopy[0] == third_zero) dataCopy.erase(dataCopy.begin());
+    // Remove end trash
+    while(dataCopy.back() == first_zero || dataCopy.back() == second_zero || dataCopy.back() == third_zero) dataCopy.pop_back();
     std::vector<double> previousFrameData;
     bool firstFrame = true;
-    for(const std::vector<double>& frameData: data){
+    for(const std::vector<double>& frameData: dataCopy){
         if(frameData.empty()) {
             std::cerr << "Frame data is empty" <<std::endl;
             continue;
         }
         if(firstFrame){
+            if(frameData[0] == -1 and frameData[1] == -1) continue; // For realime recognition
             previousFrameData = frameData;
             firstFrame = false;
         }else{
             double angle; // We use angle as the feature
-            double x = frameData[0] - previousFrameData[0];
-            double y = frameData[1] - previousFrameData[1];
-            if (x == 0)
-            {
-                if (y > 0) angle = M_PI / 2;
-                angle = -M_PI / 2;
+            if(frameData[0] != -1 or frameData[1] != -1){
+                double x = frameData[0] - previousFrameData[0];
+                double y = frameData[1] - previousFrameData[1];
+                if (x == 0)
+                {
+                    if (y > 0) angle = M_PI / 2;
+                    angle = -M_PI / 2;
+                }
+                else if (x < 0)
+                {
+                    angle = atan(y / x) + M_PI;
+                }
+                else{
+                    angle = atan(y / x);
+                }
+                angle = angle * 180.0 / M_PI; // Set to degrees
+                if(angle < 0) angle += 360;
+                angle /= magicNumber;
+                previousFrameData = frameData;
+            }else{ // Realtime recognition, the hand is not in the frame
+                angle = -1;
+                previousFrameData = {0,0};
             }
-            else if (x < 0)
-            {
-                angle = atan(y / x) + M_PI;
-            }
-            else{
-                angle = atan(y / x);
-            }
-            angle = angle * 180.0 / M_PI; // Set to degrees
-            if(angle < 0) angle += 360;
-            angle /= magicNumber;
             to_return.push_back(static_cast<int>(std::round(angle)));
-            previousFrameData = frameData;
         }
     }
     return to_return;
@@ -203,4 +218,86 @@ std::vector<std::vector<Observable>> MediapipeInterface::preprocessData(const st
 
 bool MediapipeInterface::isOpen() const {
     return isOpened;
+}
+
+double MediapipeInterface::getXRange(const std::vector<std::vector<double>>& dataToAnalyse){
+    if(dataToAnalyse.empty()) return 0;
+    double x_min = std::numeric_limits<double>::infinity();
+    double x_max = -std::numeric_limits<double>::infinity();
+    for(auto vect:dataToAnalyse){
+        if(vect.empty()) continue;
+        if(vect[0] ==  0 && vect[1] == 0) continue;
+        if(vect[0] > x_max) x_max = vect[0];
+        if(vect[0] < x_min) x_min = vect[0];
+    }
+    if(x_min == std::numeric_limits<double>::infinity() || x_max == -std::numeric_limits<double>::infinity()) return 0;
+    return x_max-x_min;
+}
+double MediapipeInterface::getYRange(const std::vector<std::vector<double>>& dataToAnalyse){
+    if(dataToAnalyse.empty()) return 0;
+    double x_min = std::numeric_limits<double>::infinity();
+    double x_max = -std::numeric_limits<double>::infinity();
+    for(auto vect:dataToAnalyse){
+        if(vect.empty()) continue;
+        if(vect[0] ==  0 && vect[1] == 0) continue;
+        if(vect[1] > x_max) x_max = vect[1];
+        if(vect[1] < x_min) x_min = vect[1];
+    }
+    if(x_min == std::numeric_limits<double>::infinity() || x_max == -std::numeric_limits<double>::infinity()) return 0;
+    return x_max-x_min;
+}
+
+std::map<std::string, bool> MediapipeInterface::getFiltersFromData(const std::vector<std::vector<double>>& dataToAnalyse){
+    // Calculate global features
+    std::map<std::string, bool> to_return;
+    double x_range = MediapipeInterface::getXRange(dataToAnalyse);
+    double y_range = MediapipeInterface::getYRange(dataToAnalyse);
+    // Global feature 1: mini-gesture (x- and y-range are <25%)
+    if(x_range <= 0.25 && y_range <= 0.25) to_return.insert(std::make_pair("mini", true));
+    else to_return.insert(std::make_pair("mini", false));
+    // Global feature 2: almost full (>65%) x-range
+    if(x_range >= 0.65) to_return.insert(std::make_pair("fullx", true));
+    else to_return.insert(std::make_pair("fullx", false));
+    // Global feature 3: almost full (>75%) y-range
+    if(y_range >= 0.75) to_return.insert(std::make_pair("fully", true));
+    else to_return.insert(std::make_pair("fully", false));
+    // Global feature 4: two hands
+    std::vector<std::vector<double>> dataCopy = std::vector(dataToAnalyse);
+    std::vector<double> first_zero = {0,0};
+    std::vector<double> second_zero = {0,0,1};
+    std::vector<double> third_zero = {0,0,-1};
+    // Remove trash in begin
+    while(dataCopy[0] == first_zero || dataCopy[0] == second_zero || dataCopy[0] == third_zero) dataCopy.erase(dataCopy.begin());
+    // Remove end trash
+    while(dataCopy.back() == first_zero || dataCopy.back() == second_zero || dataCopy.back() == third_zero) dataCopy.pop_back();
+
+    unsigned int lefth = 0;
+    for(auto vec: dataCopy){
+        if(vec.size() < 3) continue;
+        if(vec[2] == 1) lefth++;
+    }
+    if(lefth >= dataToAnalyse.size()*0.5) to_return.insert(std::make_pair("left", true));
+    else to_return.insert(std::make_pair("left", false));
+
+    return to_return;
+}
+std::map<std::string, bool> MediapipeInterface::getFiltersFromData(const std::vector<std::vector<std::vector<double>>>& dataToAnalyse){
+    std::vector<std::map<std::string, bool>> filtersPerVideo;
+    for(auto vec: dataToAnalyse){
+        filtersPerVideo.push_back(getFiltersFromData(vec));
+    }
+    std::map<std::string, bool> etalonFilters = filtersPerVideo[0];
+    std::map<std::string, bool> to_return;
+    for(auto feature: etalonFilters){
+        unsigned int ons = 0;
+        unsigned int offs = 0;
+        for(auto videoFilter: filtersPerVideo){
+            if(videoFilter.find(feature.first) != videoFilter.end()){
+                if(videoFilter.at(feature.first)) ons++;
+                else offs++;
+            }
+        }
+        to_return.insert(std::make_pair(feature.first, ons > offs));
+    }
+    return to_return;
 }

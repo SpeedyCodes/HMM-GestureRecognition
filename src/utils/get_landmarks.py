@@ -81,12 +81,14 @@ def extract_keypoints(results):
     #                results.right_hand_landmarks.landmark]).flatten() if results.right_hand_landmarks else np.zeros(
     #     21 * 3)
     # try:
-            if results is None: return [0, 0]
+            if results is None: return [0, 0, -1]
+            lefth = -1
+            if results.left_hand_landmarks: lefth = 1
             if results.right_hand_landmarks:
                 for res in results.right_hand_landmarks.landmark:
-                    rh = [res.x, res.y]
+                    rh = [res.x, res.y, lefth]
             else:
-                rh = [0, 0]
+                rh = [0, 0, lefth]
     # except:
     #     rh = [0,0]
             return rh
@@ -94,6 +96,24 @@ def extract_keypoints(results):
     #     # face,
     #     # lh,
     #     rh])
+
+def extract_realtime_keypoints(results):
+    if results is None: return [-1, -1, -1]
+    lefty = -1
+    if results.left_hand_landmarks:
+        lefty = 1
+    if results.right_hand_landmarks:
+        for res in results.right_hand_landmarks.landmark:
+            rh = [res.x, res.y, lefty]      # TODO: it's not efficient, choose another method
+    else:
+        rh = [-1, -1, lefty]
+    # except:
+    #     rh = [0,0]
+    return rh
+# return np.concatenate([# pose,
+#     # face,
+#     # lh,
+#     rh])
 
 def get_landmarks_from_video(video_path):
     """
@@ -126,4 +146,4 @@ def get_landmarks_from_video(video_path):
     # print("Total time", time.time() - timestart)
     return to_return
 
-#get_landmarks_from_video("C:/Users/dasha/PycharmProjects/HMM-GestureRecognition/Collected_videos/zero/zero7_0.avi")
+# get_landmarks_from_video("C:/Users/dasha/PycharmProjects/HMM-GestureRecognition-Collect-data/HMM-GestureRecognition-Collect-data/Training_videos/nine/nine0_0.avi")

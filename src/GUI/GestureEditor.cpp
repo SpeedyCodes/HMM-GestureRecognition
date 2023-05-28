@@ -33,6 +33,7 @@ void GestureEditor::on_selectVideoButton_clicked()
 void GestureEditor::on_trainButton_clicked()
 {
     std::vector<std::vector<std::vector<double>>> data;
+    std::map<std::string, bool> gestureFeatures;
     int vidCount = trainingVideoPaths.size();
     ui->statusLabel->setText("Detecting landmarks...\n");
     for(int i = 0; i < vidCount; i++){
@@ -43,12 +44,15 @@ void GestureEditor::on_trainButton_clicked()
         ui->progressBar->setValue(GET_LANDMARKS_TIME_USED*(float)(i+1)/vidCount);
     }
     ui->statusLabel->setText(ui->statusLabel->text() + "Landmarks detected\n");
+    ui->statusLabel->setText("Detecting gesture features...\n");
+    gestureFeatures = MediapipeInterface::getFiltersFromData(data);
+    ui->statusLabel->setText("Gesture features detected\n");
     ui->statusLabel->setText(ui->statusLabel->text() + "Preprocessing data\n");
     std::vector<std::vector<Observable>> observables = MediapipeInterface::preprocessData(data);
     ui->statusLabel->setText(ui->statusLabel->text() + "Preprocessed data\n");
     ui->statusLabel->setText(ui->statusLabel->text() + "Fitting HMM\n");
     std::string gestureID = ui->nameLineEdit->text().toStdString();
-    library->addGesture(gestureID);
+    library->addGesture(gestureID, gestureFeatures);
     bool success = library->fitAndSelect(observables, gestureID);
     ui->progressBar->setValue(100);
     ui->statusLabel->setText(ui->statusLabel->text() + "HMM fitted\n");

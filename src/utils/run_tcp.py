@@ -29,13 +29,13 @@ def run_tcp_sewer():
         image, results = utils.mediapipe_detection(frame)  # Get the landmarks
         utils.draw_styled_landmarks(image, results, True)  # Draw the landmarks on the image
         image = cv2.flip(image, 1)  # Flip the image
-        #frame = imutils.resize(frame, width=320)
+        image = imutils.resize(image, width=320)
         a = cv2.imencode('.jpg', image)[1].tobytes()  # Convert image to bytes
         imageSocket.sendall(a)  # Send the frame with the landmarks on it
-        results = utils.extract_keypoints(results)  # Extract only necessary landmarks
-        if results[0]+results[1] != 0: # only transmit when a landmark was found
-            bytes_data = struct.pack('<' + 'd' * len(results), *results) # '<' stands for 'little endian'
-            dataSocket.sendall(bytes_data)
+        results = utils.extract_realtime_keypoints(results)  # Extract only necessary landmarks
+        #if results[0]+results[1] != 0: # only transmit when a landmark was found
+        bytes_data = struct.pack('<' + 'd' * len(results), *results) # '<' stands for 'little endian'
+        dataSocket.sendall(bytes_data)
 
 
         k = cv2.waitKey(30) & 0xff

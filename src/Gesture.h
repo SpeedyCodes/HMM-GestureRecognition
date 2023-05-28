@@ -21,9 +21,10 @@ public:
  * Constructor to use when making a brand-new gesture with a HMM that has just been trained.
  * @param gestureId The name of the gesture
  * @param hiddenMarkovModel A pointer to the Hidden Markov Model to recognize the gesture
+ * @param features Global gesture features
  */
 
-    Gesture(const string &gestureId, HMM *hiddenMarkovModel);
+    Gesture(const string &gestureId, HMM *hiddenMarkovModel, std::map<std::string,bool> features = {});
 
 /**
  * Gets the ID of the gesture.
@@ -52,9 +53,20 @@ public:
  */
     nlohmann::json toJson(const string& directory);
 
+    const map<std::string, bool> &getGestureFeatures() const;
+
+    void setGestureFeatures(const map<std::string, bool> &gestureFeatures);
+
+    void setId(const string &id);
+
+    void addGestureFeature(const std::string& featureName, bool value);
+
+    void removeGestureFeature(const std::string& featureName);
+
 private:
     string id;
     HMM* hiddenMarkovModel;
+    std::map<std::string,bool> gestureFeatures; // description of the gesture features
 };
 
 

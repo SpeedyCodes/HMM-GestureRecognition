@@ -22,6 +22,8 @@ struct hiddenState {
  */
     hiddenState();
 
+    hiddenState(const hiddenState& other);
+  
 /**
  * Initializes a hidden state of which only the initial probability is known
  * @param id The ID to identify the state with in the parent HMM.

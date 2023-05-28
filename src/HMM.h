@@ -31,6 +31,8 @@ public:
 
     HMM(const string &saveFilePath, bool &success);
 
+    HMM(const HMM& other);
+  
 /**
  * Hidden Markov Model destructor
  */
@@ -64,7 +66,7 @@ public:
  * @param observations The observations
  * @return The probability of this series of observables occurring according to this HMM
  */
-
+  
     logProbability likelihood(const vector<Observable> &observations) const;
 
 /**

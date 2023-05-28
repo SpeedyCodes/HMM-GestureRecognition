@@ -14,7 +14,7 @@ typedef int Observable;
 class Gesture;
 class HMM;
 
-class GestureLibrary: public QObject {
+class GestureLibrary: public QObject {  
 public:
 
 /**
@@ -32,7 +32,7 @@ public:
     void setPossibleObservables(std::map <int, std::vector<Observable > > observables);
     HMM* getThresholdHMM() const;
     bool addGesture(Gesture& gesture);
-    bool addGesture(string& gestureID);
+    bool addGesture(string& gestureID, std::map<std::string,bool> gestureFeatures = {});
 
 /**
  * Reads a gesture library JSON file.
@@ -55,10 +55,9 @@ public:
  */
 
     bool isFileSystemInitiated() const;
-    bool modelTrainingAndSelection(std::vector<std::vector<Observable>>& observed, std::string gestureID);
-    bool isolatedRecognition(std::string& videoPath, std::string& gestureID);
     std::string realtimeRecognition(const std::vector<double>& frameLandmarks);
     bool
+
     /**
      * trains and tests HMMs with hidden states amount going from 3 to a given amount for a given data set and assigns the one with
      * the highest success rate to a given gesture
@@ -72,9 +71,23 @@ public:
                  double threshold = 0.0001);
     const std::map<std::string, Gesture>& getGestures() const;
 
+    std::map<std::string,Gesture> getFilteredGestures(std::map<std::string,bool> dataFilters)const;
+
     std::string recognizeFromVideo(const char *AbsolutePath, MediapipeInterface* interface);
 
-    std::pair<std::string, logProbability> recognizeGesture(std::vector<int> &observed);
+    std::pair<std::string, logProbability> recognizeGesture(std::vector<int> &observed) const;
+    std::pair<std::string, logProbability> recognizeFromGivenGestures(vector<int>& observed, const std::map<std::string, Gesture>& givenGestures) const;
+
+    bool isMultipleOn() const;
+
+    void setMultipleOn(bool multipleOn);
+
+    bool filterPressed = false;
+
+    bool allowFilter = true;
+
+    bool startAnalysis = false;
+
 private:
     /**
      * creates a "left to right" HMM with a certain amount of hidden states
@@ -90,7 +103,9 @@ private:
     std::vector<std::vector<double> > accumulatedLiveFeedData;
     std::string directory;
     std::string name;
+    unsigned int counterOfEmptiness = 0;
     HMM* thresholdHMM = nullptr;
+    bool multipleOn = false;
 };
 
 
