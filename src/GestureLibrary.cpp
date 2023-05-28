@@ -356,7 +356,8 @@ std::string GestureLibrary::recognizeFromVideo(const char* AbsolutePath, Mediapi
     else{
         std::map<std::string,bool> filters = MediapipeInterface::getFiltersFromData(landmarks);
         std::map<std::string, Gesture> filtered = getFilteredGestures(filters);
-        gesture = recognizeFromGivenGestures(data, filtered);
+        if(filtered.empty()) gesture = recognizeGesture(data);
+        else gesture = recognizeFromGivenGestures(data, filtered);
     }
     return gesture.first;
 }
