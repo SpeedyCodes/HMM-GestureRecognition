@@ -9,6 +9,7 @@ RobotController::RobotController() : socket(this)
 }
 
 void RobotController::attemptConnection() {
+    if (ip.isNull()) return;
     socket.connectToHost(ip, 3000);
 }
 

@@ -29,8 +29,7 @@ MainWindow::MainWindow(QWidget *parent) :
     //player->play();
     //videoWidget->show();
     library = new GestureLibrary();
-    signLanguageWriter = nullptr;
-    robotConnectionManager = nullptr;
+    application = nullptr;
 }
 
 MainWindow::~MainWindow()
@@ -50,24 +49,13 @@ void MainWindow::on_actionNew_Gesture_triggered()
 
 void MainWindow::on_actionSign_Language_triggered()
 {
-    if(signLanguageWriter != nullptr){
-        signLanguageWriter->setWindowState(Qt::WindowState::WindowActive);
-    }else{
-        signLanguageWriter = new SignLanguageWriter(this);
-        signLanguageWriter->show();
-    }
-
+    initApplicationWindow(new SignLanguageWriter(this));
 }
 
 
 void MainWindow::on_actionRobot_triggered()
 {
-    if(robotConnectionManager != nullptr){
-        robotConnectionManager->setWindowState(Qt::WindowState::WindowActive);
-    }else{
-        robotConnectionManager = new RobotConnectionManager(this);
-        robotConnectionManager->show();
-    }
+    initApplicationWindow(new RobotConnectionManager(this));
 }
 
 void MainWindow::paintRealtimeFrame(QImage& image) {
@@ -148,12 +136,31 @@ void MainWindow::on_recognizeButton_clicked()
 
 void MainWindow::handleGestureRecognized(std::string &gestureID) {
     ui->recognizedListWidget->addItem(QString::fromStdString(gestureID));
+    application->handleGestureRecognized(gestureID);
 }
 
 void MainWindow::tryRealtimeRecognition(const std::vector<double> &landmarks) {
     std::string gesture = library->realtimeRecognition(landmarks);
     if(!gesture.empty()){
         handleGestureRecognized(gesture);
+    }
+}
+
+void MainWindow::applicationWindowClosed() {
+    QObject::disconnect(application, &ApplicationExampleWindow::closed,
+                     this, &MainWindow::applicationWindowClosed);
+    delete application;
+    application = nullptr;
+}
+
+void MainWindow::initApplicationWindow(ApplicationExampleWindow *window) {
+    if(application != nullptr){
+        application->setWindowState(Qt::WindowState::WindowActive);
+    }else{
+        application = window;
+        application->show();
+        QObject::connect(application, &ApplicationExampleWindow::closed,
+                         this, &MainWindow::applicationWindowClosed);
     }
 }
 
