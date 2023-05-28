@@ -146,4 +146,4 @@ def get_landmarks_from_video(video_path):
     # print("Total time", time.time() - timestart)
     return to_return
 
-get_landmarks_from_video("C:/Users/dasha/PycharmProjects/HMM-GestureRecognition-Collect-data/HMM-GestureRecognition-Collect-data/Training_videos/nine/nine0_0.avi")
+# get_landmarks_from_video("C:/Users/dasha/PycharmProjects/HMM-GestureRecognition-Collect-data/HMM-GestureRecognition-Collect-data/Training_videos/nine/nine0_0.avi")

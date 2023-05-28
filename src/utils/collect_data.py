@@ -189,4 +189,4 @@ def start_collection(folder_name, gestures, no_sequences, draw_all, stop_key):
 
     cap.release()
     cv2.destroyAllWindows()
-start_collection(folder_name, gestures, no_sequences, draw_all, stop_key)
+# start_collection(folder_name, gestures, no_sequences, draw_all, stop_key)

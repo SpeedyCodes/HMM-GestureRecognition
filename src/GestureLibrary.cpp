@@ -104,7 +104,7 @@ std::string GestureLibrary::realtimeRecognition(const std::vector<double>& frame
         }
         if(gesturesToClassify.empty()) return "";
         // Get the highest likelihood and the name of the most probable gesture
-        std::pair<std::string, double> probableGesture = recognizeFromGivenGestures(observables, gesturesToClassify);
+        std::pair<std::string, logProbability> probableGesture = recognizeFromGivenGestures(observables, gesturesToClassify);
         accumulatedLiveFeedData.clear();
         startAnalysis = false;
         return probableGesture.first;
@@ -390,17 +390,17 @@ std::pair<std::string, logProbability> GestureLibrary::recognizeGesture(vector<i
     return gesture;
 }
 
-std::pair<std::string, double> GestureLibrary::recognizeFromGivenGestures(vector<int>& observed, const std::map<std::string, Gesture>& givenGestures) const{
-    std::map<std::string, double>likelyhoodHMM;
+std::pair<std::string, logProbability> GestureLibrary::recognizeFromGivenGestures(vector<int>& observed, const std::map<std::string, Gesture>& givenGestures) const{
+    std::map<std::string, logProbability>likelyhoodHMM;
     std::map<std::string, Gesture>::const_iterator it;
     for (it = givenGestures.begin(); it != givenGestures.end(); it++){
-        double likely = it->second.getHiddenMarkovModel()->likelihood(observed);
+        logProbability likely = it->second.getHiddenMarkovModel()->likelihood(observed);
         likelyhoodHMM[it->first] = likely;
     }
-    std::pair<std::string, double>gesture;
+    std::pair<std::string, logProbability>gesture;
     gesture.first = likelyhoodHMM.begin()->first;
     gesture.second = likelyhoodHMM.begin()->second;
-    std::map<std::string, double>::iterator it2;
+    std::map<std::string, logProbability>::iterator it2;
     for(it2 = likelyhoodHMM.begin(); it2!=likelyhoodHMM.end(); it2++){
         if(it2->second > gesture.second){
             gesture.first = it2->first;

@@ -77,8 +77,8 @@ bool HMM::checkValues() const{
     for(auto state:hiddenStates){
         if (!state->isValid()){
             cerr << "probabilities do not add up to 1 for a certain state" << endl;
-//            success = false;
-//            break;
+            success = false;
+            break;
         }
     }
     for(auto state:hiddenStates){
@@ -518,7 +518,7 @@ HMM::HMM(const HMM& other): observables(other.observables) {
     }
     // Remove old states
     for (hiddenState *state: newHiddenStates) {
-        for (std::map<hiddenState *, double>::iterator it = state->transitionMap.begin();
+        for (std::map<hiddenState *, logProbability>::iterator it = state->transitionMap.begin();
              it != state->transitionMap.end();) {
             if (std::find(newHiddenStates.begin(), newHiddenStates.end(), it->first) == newHiddenStates.end()) {
                 state->transitionMap.erase((it++)->first);
