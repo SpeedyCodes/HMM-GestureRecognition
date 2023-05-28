@@ -67,7 +67,7 @@ std::string GestureLibrary::realtimeRecognition(const std::vector<double>& frame
         return "";
     }
     if(frameLandmarks[0] != -1 || frameLandmarks[1] != -1){ // The hand is not detected
-        for(int i = 0; i != counterOfEmptiness; i++) accumulatedLiveFeedData.push_back({0,0});
+        if(!accumulatedLiveFeedData.empty()) for(int i = 0; i != counterOfEmptiness; i++) accumulatedLiveFeedData.push_back({0,0});
         accumulatedLiveFeedData.push_back(frameLandmarks);
         counterOfEmptiness = 0;
     }else {

@@ -67,6 +67,14 @@ Gesture::Gesture(const string &saveFilePath, bool &success) {
     }
     hiddenMarkovModel = new HMM(hiddenStatesFinal, observablesFinal);
 
+    // Read features
+    nlohmann::json tagMap = data.value("features", nlohmann::json::object());
+    for (auto it = tagMap.begin(); it != tagMap.end(); ++it) {
+        std::string key = it.key();
+        bool value = it.value().get<bool>();
+        gestureFeatures[key] = value;
+    }
+
     success = true;
 }
 
@@ -80,6 +88,7 @@ nlohmann::json Gesture::toJson(const string &directory) {
     string path = directory + "/" + id + ".json";
     hiddenMarkovModel->HMMtoJson(path);
     output["HMMpath"] = id + ".json";
+    output["features"] = gestureFeatures;
     return output;
 }
 

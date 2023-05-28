@@ -9,6 +9,7 @@
 #include <QObject>
 #include <QStandardPaths>
 #include <QFileDialog>
+#include <QCheckBox>
 
 MainWindow::MainWindow(QWidget *parent) :
     QMainWindow(parent),
@@ -28,6 +29,13 @@ MainWindow::MainWindow(QWidget *parent) :
     //player->setSource(QUrl("D:/School/UAntwerpen/TA/TOg/HMM-GestureRecognition/cmake-build-debug-mingw/PAL-CLIP PP4.mp4"));
     //player->play();
     //videoWidget->show();
+
+    // Create a checkbox
+    QCheckBox* checkBox = new QCheckBox("My Checkbox", this);
+    QVBoxLayout* layout = new QVBoxLayout(ui->videoTab);
+    checkBox->move(100, 210);
+    layout->addWidget(checkBox);
+
     library = new GestureLibrary();
     signLanguageWriter = nullptr;
     robotConnectionManager = nullptr;
