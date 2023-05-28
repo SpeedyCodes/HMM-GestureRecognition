@@ -80,6 +80,7 @@ std::string GestureLibrary::realtimeRecognition(const std::vector<double>& frame
         }
         std::cout << accumulatedLiveFeedData.size() << std::endl;
         // More magic! Or less, you know better
+        // TODO: remove if q
         for(int i = 0; i != 5; i++) accumulatedLiveFeedData.erase(accumulatedLiveFeedData.begin());
         for(int i = 0; i != 5; i++) accumulatedLiveFeedData.pop_back();
         // Preprocess data
@@ -88,11 +89,16 @@ std::string GestureLibrary::realtimeRecognition(const std::vector<double>& frame
         for(auto filt:gestureFilter){
             std::cout << filt.first << ": " << filt.second << std::endl;
         }
-        // Get filtered gestures
-        std::map<std::string,Gesture> filteredGestures = getFilteredGestures(accumulatedLiveFeedData, gestureFilter);
-        if(filteredGestures.empty()) return "";
+        std::map<std::string,Gesture> gesturesToClassify;
+        if(multipleOn){
+            // Get filtered gestures
+            gesturesToClassify = getFilteredGestures(gestureFilter);
+        }else{
+            gesturesToClassify = gestures;
+        }
+        if(gesturesToClassify.empty()) return "";
         // Get the highest likelihood and the name of the most probable gesture
-        std::pair<std::string, double> probableGesture = recognizeFromGivenGestures(observables, filteredGestures);
+        std::pair<std::string, double> probableGesture = recognizeFromGivenGestures(observables, gesturesToClassify);
         accumulatedLiveFeedData.clear();
         return probableGesture.first;
     }else return "";
@@ -345,7 +351,13 @@ const std::map<std::string, Gesture> &GestureLibrary::getGestures() const {
 std::string GestureLibrary::recognizeFromVideo(const char* AbsolutePath, MediapipeInterface* interface){
     std::vector<std::vector<double>> landmarks = interface->getLandmarksFromVideo(AbsolutePath);
     std::vector<int> data = MediapipeInterface::preprocessData(landmarks);
-    std::pair<std::string, double>gesture = recognizeGesture(data);
+    std::pair<std::string, double>gesture;
+    if(!multipleOn) gesture = recognizeGesture(data);
+    else{
+        std::map<std::string,bool> filters = MediapipeInterface::getFiltersFromData(landmarks);
+        std::map<std::string, Gesture> filtered = getFilteredGestures(filters);
+        gesture = recognizeFromGivenGestures(data, filtered);
+    }
     return gesture.first;
 }
 
@@ -389,7 +401,7 @@ std::pair<std::string, double> GestureLibrary::recognizeFromGivenGestures(vector
     return gesture;
 }
 
-std::map<std::string,Gesture> GestureLibrary::getFilteredGestures(const std::vector<std::vector<double>>& dataToAnalyse, std::map<std::string,bool> dataFilters)const{
+std::map<std::string,Gesture> GestureLibrary::getFilteredGestures(std::map<std::string,bool> dataFilters)const{
     std::map<std::string,Gesture> to_return;
     for(const auto& gestureTuple:gestures){
         if(gestureTuple.second.getGestureFeatures().empty()){

@@ -39,7 +39,7 @@ public:
                  double threshold = 0.0001);
     const std::map<std::string, Gesture>& getGestures() const;
 
-    std::map<std::string,Gesture> getFilteredGestures(const std::vector<std::vector<double>>& dataToAnalyse, std::map<std::string,bool> dataFilters)const;
+    std::map<std::string,Gesture> getFilteredGestures(std::map<std::string,bool> dataFilters)const;
 
     std::string recognizeFromVideo(const char *AbsolutePath, MediapipeInterface* interface);
 
