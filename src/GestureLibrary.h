@@ -21,6 +21,7 @@ private:
     std::string name;
     unsigned int counterOfEmptiness = 0;
     HMM* thresholdHMM = nullptr;
+    bool multipleOn = false;
 public:
     explicit GestureLibrary(){};
     explicit GestureLibrary(std::string& path);
