@@ -28,3 +28,7 @@ To demonstrate the possibilities that gesture recognition creates, two demo-appl
 - Add the parent directory of the previous directory to the `CMAKE_PREFIX_PATH` CMake option, e.g. `-DCMAKE_PREFIX_PATH=D:/Qt/6.5.0/mingw_64`
 - In CMakelists.txt, add the path to the python headers and binaries, according to the given examples
 - If on your system, the command line command to run Python 3 is "python" instead of "python3", you can edit this in CMakelists.txt as well.
+
+## Training Data
+The collect-data branch contains every version of all our training videos, along with some helper Python scripts we used to create them.
+Students and staff of the University of Antwerp can find the latest versions, that we use ourselves, [here](https://uantwerpen-my.sharepoint.com/:f:/g/personal/s0220671_ad_ua_ac_be/El_XvSfQ1CJPkldVhC1tJ_UBOGQ44X7ueCbLYlMyHeXK_w?e=Pfgn3M).
