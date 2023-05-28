@@ -8,6 +8,9 @@ namespace Ui {
 class SignLanguageWriter;
 }
 
+/**
+ * Window to display the sign language application
+ */
 class SignLanguageWriter : public ApplicationExampleWindow
 {
     Q_OBJECT

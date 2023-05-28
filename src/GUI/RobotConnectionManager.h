@@ -9,6 +9,9 @@ namespace Ui {
 class RobotConnectionManager;
 }
 
+/**
+ * Window to facilitate the connection with the remote controlled vehicle-application
+ */
 class RobotConnectionManager : public ApplicationExampleWindow
 {
     Q_OBJECT
@@ -19,9 +22,18 @@ public:
     void handleGestureRecognized(string &gestureID) override;
 
 private slots:
+/**
+ * Updates the GUI when a connection has been established
+ */
     void onConnection();
 
+/**
+ * Shows a notification when a connection test has succeeded
+ */
+
     void onConnectionTestSuccess();
+
+    // UI button click handlers
 
     void on_connectButton_clicked();
 
