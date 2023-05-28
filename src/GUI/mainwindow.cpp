@@ -17,20 +17,7 @@ MainWindow::MainWindow(QWidget *parent) :
     ui(new Ui::MainWindow)
 {
     ui->setupUi(this);
-    // Potentially useful for reading from a video file later
-//    QMediaPlayer* player = new QMediaPlayer(this);
-//    QVideoWidget *videoWidget = new QVideoWidget;
-
-//    QBoxLayout *layout = new QVBoxLayout;
-//    layout->addWidget(videoWidget);
-
-    //ui->videoFrame->setLayout(layout);
-
-    //player->setVideoOutput(videoWidget);
-    //player->setSource(QUrl("D:/School/UAntwerpen/TA/TOg/HMM-GestureRecognition/cmake-build-debug-mingw/PAL-CLIP PP4.mp4"));
-    //player->play();
-    //videoWidget->show();
-
+      
     // Create a checkbox
     QCheckBox* checkBox = new QCheckBox("Multiple features on", this);
     QObject::connect(checkBox, SIGNAL(clicked(bool)), this, SLOT(setMultiple(bool)));
@@ -52,8 +39,7 @@ MainWindow::MainWindow(QWidget *parent) :
     qApp->installEventFilter(this);
 
     library = new GestureLibrary();
-    signLanguageWriter = nullptr;
-    robotConnectionManager = nullptr;
+    application = nullptr;
 }
 
 MainWindow::~MainWindow()
@@ -73,24 +59,13 @@ void MainWindow::on_actionNew_Gesture_triggered()
 
 void MainWindow::on_actionSign_Language_triggered()
 {
-    if(signLanguageWriter != nullptr){
-        signLanguageWriter->setWindowState(Qt::WindowState::WindowActive);
-    }else{
-        signLanguageWriter = new SignLanguageWriter(this);
-        signLanguageWriter->show();
-    }
-
+    initApplicationWindow(new SignLanguageWriter(this));
 }
 
 
 void MainWindow::on_actionRobot_triggered()
 {
-    if(robotConnectionManager != nullptr){
-        robotConnectionManager->setWindowState(Qt::WindowState::WindowActive);
-    }else{
-        robotConnectionManager = new RobotConnectionManager(this);
-        robotConnectionManager->show();
-    }
+    initApplicationWindow(new RobotConnectionManager(this));
 }
 
 void MainWindow::paintRealtimeFrame(QImage& image) {
@@ -171,6 +146,7 @@ void MainWindow::on_recognizeButton_clicked()
 
 void MainWindow::handleGestureRecognized(std::string &gestureID) {
     ui->recognizedListWidget->addItem(QString::fromStdString(gestureID));
+    application->handleGestureRecognized(gestureID);
 }
 
 void MainWindow::tryRealtimeRecognition(const std::vector<double> &landmarks) {
@@ -206,4 +182,21 @@ bool MainWindow::eventFilter(QObject *obj, QEvent *event)
 
 void MainWindow::setAllowFilter(bool res){
     library->allowFilter = res;
+}
+void MainWindow::applicationWindowClosed() {
+    QObject::disconnect(application, &ApplicationExampleWindow::closed,
+                     this, &MainWindow::applicationWindowClosed);
+    delete application;
+    application = nullptr;
+}
+
+void MainWindow::initApplicationWindow(ApplicationExampleWindow *window) {
+    if(application != nullptr){
+        application->setWindowState(Qt::WindowState::WindowActive);
+    }else{
+        application = window;
+        application->show();
+        QObject::connect(application, &ApplicationExampleWindow::closed,
+                         this, &MainWindow::applicationWindowClosed);
+    }
 }
